@@ -1,0 +1,5 @@
+# Consumer operational guidance
+
+Read docs/architecture/governance.md and docs/consumer-installation.md before editing managed artifacts. Keep source comment-free and run pnpm test:arch, pnpm test, pnpm lint and pnpm build. Decisions are draft-first; accepted decisions are immutable. Preserve the devcontainer nested mounts and host-owned authentication. Consumer source, package identity and implementation graph are project-owned.
+
+Cinderling is distributed as a private GitHub Release asset in scaredfinger/cinderling. For a consumer init or upgrade download, provide GH_TOKEN in the process environment with permission to read that repository; this project's own token or remote may not have access. If access is unavailable, stop and request authorized access. Do not print or persist the token. An already obtained release archive can be supplied with --archive. Read docs/consumer-installation.md for bootstrap and target-release upgrade instructions. Direct agent-operated GitHub REST requests follow the github-authentication skill; the consumer CLI uses GH_TOKEN separately.

@@ -1,0 +1,9 @@
+node_modules/
+.nx/
+.devcontainer-local/
+.opencode-state/
+coverage/
+.env
+dist/
+test-results/
+playwright-report/

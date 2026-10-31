@@ -1,0 +1,29 @@
+name: Architecture
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm test:cinderling
+      - run: pnpm db:up
+      - run: pnpm setup:browser
+      - run: pnpm e2e
+      - run: pnpm lint
+        env:
+          ARCH_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+      - run: pnpm build

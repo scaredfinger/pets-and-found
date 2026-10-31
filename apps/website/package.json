@@ -1,0 +1,8 @@
+{
+  "name": "@scaffold/website",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": "./src/server.ts",
+  "scripts": { "dev": "tsx src/main.ts", "start": "tsx src/main.ts", "build": "tsc --noEmit -p ../../tsconfig.json", "lint": "tsc --noEmit -p ../../tsconfig.json", "test": "tsx --test src/*.test.ts", "test:unit": "tsx --test src/*.test.ts" }
+}

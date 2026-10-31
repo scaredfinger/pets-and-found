@@ -1,0 +1,362 @@
+{
+  "version": 1,
+  "units": {
+    "documentation": {
+      "kind": "documentation",
+      "children": {
+        "governance-compaction": {
+          "files": [
+            "docs/architecture/governance.md"
+          ]
+        },
+        "consumer-installation": {
+          "files": [
+            "docs/consumer-installation.md"
+          ]
+        },
+        "devcontainer": {
+          "files": [
+            "docs/devcontainer.md"
+          ]
+        }
+      }
+    },
+    "opencode": {
+      "kind": "configuration",
+      "children": {
+        "agents": {
+          "kind": "agent-group",
+          "globs": [
+            ".opencode/agents/**"
+          ]
+        },
+        "commands": {
+          "kind": "command-group",
+          "children": {
+            "prime": {
+              "files": [
+                ".opencode/commands/prime.md"
+              ]
+            },
+            "solve": {
+              "files": [
+                ".opencode/commands/solve.md"
+              ]
+            },
+            "promote-decision-draft": {
+              "files": [
+                ".opencode/commands/promote-decision-draft.md"
+              ]
+            }
+          }
+        },
+        "skills": {
+          "kind": "skill-group",
+          "children": {
+            "github-authentication": {
+              "files": [
+                ".opencode/skills/github-authentication/SKILL.md"
+              ]
+            },
+            "github-interaction": {
+              "files": [
+                ".opencode/skills/github-interaction/SKILL.md"
+              ]
+            },
+            "pr-creation": {
+              "files": [
+                ".opencode/skills/pr-creation/SKILL.md"
+              ]
+            },
+            "issue-naming": {
+              "files": [
+                ".opencode/skills/issue-naming/SKILL.md"
+              ]
+            },
+            "branch-naming": {
+              "files": [
+                ".opencode/skills/branch-naming/SKILL.md"
+              ]
+            },
+            "commit-naming": {
+              "files": [
+                ".opencode/skills/commit-naming/SKILL.md"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "tooling": {
+      "kind": "package-unit",
+      "package": "cinderling-scaffold",
+      "children": {
+        "workspace": {
+          "files": [
+            "tools/workspace.mjs",
+            "tools/shared.mjs"
+          ]
+        },
+        "decisions": {
+          "files": [
+            "tools/decisions.mjs"
+          ]
+        },
+        "graph": {
+          "files": [
+            "tools/graph.mjs",
+            "docs/implementation-graph.json"
+          ]
+        },
+        "evaluations": {
+          "files": [
+            "tools/architecture.mjs",
+            "tools/check-source-language.mjs"
+          ]
+        },
+        "cli": {
+          "files": [
+            "tools/cli.mjs"
+          ]
+        },
+        "distribution": {
+          "files": [
+            "tools/distribution.mjs",
+            "tools/cinderling.mjs"
+          ]
+        },
+        "pr-body": {
+          "files": [
+            "tools/pr-body.mjs"
+          ]
+        },
+        "tests": {
+          "globs": [
+            "tools/*.test.mjs"
+          ],
+          "tests": [
+            "pnpm test:tools"
+          ]
+        }
+      }
+    },
+    "acceptance": {
+      "kind": "package-unit",
+      "package": "@scaffold/acceptance",
+      "children": {
+        "scenario": {
+          "files": [
+            "tests/acceptance/features/greeting.feature",
+            "tests/acceptance/features/greeting.ts",
+            "tests/acceptance/features/database.feature",
+            "tests/acceptance/features/database.ts",
+            "tests/acceptance/features/pool-recovery.feature",
+            "tests/acceptance/features/pool-recovery.ts"
+          ],
+          "tests": [
+            "pnpm --filter @scaffold/acceptance test"
+          ]
+        }
+      }
+    },
+    "database-infrastructure": {
+      "kind": "configuration",
+      "files": ["compose.yaml"],
+      "tests": ["docker compose config --quiet", "pnpm e2e"]
+    },
+    "ci": {
+      "kind": "configuration",
+      "files": [".github/workflows/architecture.yml"],
+      "tests": ["pnpm test", "pnpm test:arch", "pnpm test:cinderling", "pnpm e2e", "pnpm build"]
+    },
+    "browser-tests": {
+      "kind": "test-suite",
+      "globs": ["tests/browser/**"],
+      "tests": ["pnpm test:browser"]
+    },
+    "backend": {
+      "kind": "package-unit",
+      "package": "@scaffold/backend",
+      "globs": ["apps/backend/src/**"],
+      "tests": ["pnpm --filter @scaffold/backend test"]
+    },
+    "website": {
+      "kind": "package-unit",
+      "package": "@scaffold/website",
+      "globs": ["apps/website/src/**"],
+      "tests": ["pnpm --filter @scaffold/website test"]
+    },
+    "greeting": {
+      "kind": "package-unit",
+      "package": "@scaffold/greeting",
+      "globs": ["libs/greeting/src/**"],
+      "tests": ["pnpm --filter @scaffold/greeting test"]
+    },
+    "database": {
+      "kind": "package-unit",
+      "package": "@scaffold/db",
+      "globs": ["libs/db/src/**", "libs/db/migrations/**"],
+      "tests": ["pnpm --filter @scaffold/db test", "pnpm e2e"]
+    },
+    "project": {
+      "kind": "consumer",
+      "children": {
+        "domain": {
+          "files": [
+            "docs/architecture/project-domain.md"
+          ]
+        }
+      }
+    }
+  },
+  "relationships": [
+    { "from": "backend", "to": "greeting", "type": "dependsOn" },
+    { "from": "backend", "to": "database", "type": "dependsOn" },
+    { "from": "website", "to": "backend", "type": "dependsOn" },
+    { "from": "database", "to": "database-infrastructure", "type": "dependsOn" },
+    { "from": "acceptance.scenario", "to": "backend", "type": "dependsOn" },
+    { "from": "acceptance.scenario", "to": "website", "type": "dependsOn" },
+    { "from": "acceptance.scenario", "to": "database", "type": "dependsOn" },
+    {
+      "from": "browser-tests",
+      "to": "website",
+      "type": "dependsOn"
+    },
+    {
+      "from": "browser-tests",
+      "to": "backend",
+      "type": "dependsOn"
+    },
+    {
+      "from": "browser-tests",
+      "to": "database",
+      "type": "dependsOn"
+    },
+    {
+      "from": "opencode.commands.prime",
+      "to": "documentation.governance-compaction",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.commands.solve",
+      "to": "documentation.governance-compaction",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.commands.solve",
+      "to": "opencode.skills.github-authentication",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.commands.solve",
+      "to": "opencode.skills.github-interaction",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.skills.github-interaction",
+      "to": "opencode.skills.github-authentication",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.commands.solve",
+      "to": "opencode.skills.pr-creation",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.commands.solve",
+      "to": "opencode.skills.commit-naming",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.commands.solve",
+      "to": "opencode.skills.branch-naming",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.commands.promote-decision-draft",
+      "to": "tooling.decisions",
+      "type": "dependsOn"
+    },
+    {
+      "from": "opencode.skills.pr-creation",
+      "to": "tooling.pr-body",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.graph",
+      "to": "tooling.workspace",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.decisions",
+      "to": "tooling.workspace",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.evaluations",
+      "to": "tooling.graph",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.evaluations",
+      "to": "tooling.decisions",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.cli",
+      "to": "tooling.evaluations",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.cli",
+      "to": "tooling.graph",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.cli",
+      "to": "tooling.decisions",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.distribution",
+      "to": "tooling.evaluations",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.distribution",
+      "to": "tooling.decisions",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.distribution",
+      "to": "opencode.agents",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.distribution",
+      "to": "opencode.commands",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.distribution",
+      "to": "opencode.skills",
+      "type": "dependsOn"
+    },
+    {
+      "from": "opencode.commands.solve",
+      "to": "tooling.graph",
+      "type": "dependsOn"
+    },
+    {
+      "from": "opencode.commands.solve",
+      "to": "tooling.evaluations",
+      "type": "dependsOn"
+    },
+    {
+      "from": "tooling.tests",
+      "to": "tooling.cli",
+      "type": "dependsOn"
+    }
+  ],
+  "notes": "Package names come from pnpm manifests. Semantic completeness and impact scope require review."
+}

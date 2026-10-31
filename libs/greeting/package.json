@@ -1,0 +1,8 @@
+{
+  "name": "@scaffold/greeting",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": { "build": "tsc --noEmit -p ../../tsconfig.json", "lint": "tsc --noEmit -p ../../tsconfig.json", "test": "tsx --test src/*.test.ts", "test:unit": "tsx --test src/*.test.ts" }
+}

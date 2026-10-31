@@ -1,0 +1,47 @@
+{
+  "name": "Cinderling — Node 24 / OpenCode",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace",
+  "updateRemoteUserUID": true,
+  "initializeCommand": ".devcontainer/initialize.sh",
+  "postCreateCommand": ".devcontainer/post-create.sh",
+  "postStartCommand": ".devcontainer/post-start.sh",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=${localWorkspaceFolder}/.devcontainer-local/.local,target=/home/node/.local,type=bind",
+    "source=${localWorkspaceFolder}/.devcontainer-local/.local/share,target=/home/node/.local/share,type=bind",
+    "source=${localWorkspaceFolder}/.devcontainer-local/.local/state,target=/home/node/.local/state,type=bind",
+    "source=${localWorkspaceFolder}/.devcontainer-local/.cache,target=/home/node/.cache,type=bind",
+    "source=${localEnv:HOME}/.config/opencode,target=/home/node/.config/opencode,type=bind,readonly",
+    "source=${localEnv:HOME}/.local/share/opencode/auth.json,target=/home/node/.local/share/opencode/auth.json,type=bind",
+    "source=${localEnv:HOME}/.local/share/opencode/mcp-auth.json,target=/home/node/.local/share/opencode/mcp-auth.json,type=bind",
+    "source=${localWorkspaceFolder}/.opencode-state/share,target=/home/node/.local/share/opencode,type=bind",
+    "source=${localWorkspaceFolder}/.opencode-state/cache,target=/home/node/.cache/opencode,type=bind",
+    "source=${localWorkspaceFolder}/.opencode-state/state,target=/home/node/.local/state/opencode,type=bind"
+  ],
+  "remoteEnv": {
+    "HOST_WORKSPACE": "${localWorkspaceFolder}"
+  },
+  "runArgs": [
+    "--add-host",
+    "host.docker.internal:host-gateway",
+    "--env-file",
+    ".env"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1.8": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vitest.explorer",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "pets-and-found",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.32.1",
+  "engines": { "node": ">=24 <25" },
+  "devDependencies": {
+    "@cucumber/gherkin": "^42.0.1",
+    "@cucumber/messages": "^34.2.1",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.0",
+    "nx": "^21.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0",
+    "yaml": "^2.9.1"
+  },
+  "scripts": {
+    "dev:backend": "pnpm --filter @scaffold/backend start",
+    "dev:website": "pnpm --filter @scaffold/website start",
+    "build": "pnpm type-check",
+    "type-check": "tsc --noEmit",
+    "lint": "pnpm test:arch && pnpm type-check",
+    "test": "pnpm -r --if-present test:unit",
+    "test:arch": "node tools/check-source-language.mjs && node tools/cli.mjs check",
+    "test:cinderling": "node --test tools/*.test.mjs",
+    "test:tools": "node --test tools/*.test.mjs",
+    "db:up": "docker compose up -d --wait db",
+    "db:migrate": "pnpm --filter @scaffold/db migrate",
+    "db:down": "docker compose down",
+    "acceptance": "pnpm --filter @scaffold/acceptance test",
+    "setup:browser": "playwright install --with-deps chromium",
+    "test:browser": "playwright test --config tests/browser/playwright.config.ts",
+    "e2e": "pnpm acceptance && pnpm test:browser"
+  }
+}

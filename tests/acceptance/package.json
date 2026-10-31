@@ -1,0 +1,13 @@
+{
+  "name": "@scaffold/acceptance",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "tsc --noEmit -p ../../tsconfig.json", "lint": "tsc --noEmit -p ../../tsconfig.json", "test": "NODE_OPTIONS='--import tsx' cucumber-js --import 'features/**/*.ts' 'features/**/*.feature'" },
+  "dependencies": {
+    "@cucumber/cucumber": "^11.3.0",
+    "@scaffold/backend": "workspace:*",
+    "@scaffold/db": "workspace:*",
+    "@scaffold/website": "workspace:*"
+  }
+}
