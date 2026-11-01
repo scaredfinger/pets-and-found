@@ -23,7 +23,7 @@
     "lint": "pnpm test:arch && pnpm type-check",
     "test": "pnpm -r --if-present test:unit",
     "test:arch": "node tools/check-source-language.mjs && node tools/cli.mjs check",
-    "test:cinderling": "node --test tools/*.test.mjs",
+    "test:pets-and-found": "node --test tools/*.test.mjs",
     "test:tools": "node --test tools/*.test.mjs",
     "db:up": "docker compose up -d --wait db",
     "db:migrate": "pnpm --filter @scaffold/db migrate",

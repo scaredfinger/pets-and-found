@@ -1,6 +1,6 @@
-# Cinderling scaffold
+# Pets and Found
 
-<img src="docs/logo.png" alt="Cinderling scaffold logo" width="240">
+<img src="docs/logo.png" alt="Pets and Found logo" width="240">
 
 A TypeScript pnpm and Nx monorepo with a backend, website, greeting and database libraries, PostgreSQL migrations, unit tests and Gherkin acceptance tests.
 
@@ -16,6 +16,6 @@ The initial migrations create greeting records, index them by creation time, and
 
 ## Checks
 
-Run `pnpm test`, `pnpm type-check`, `pnpm test:arch`, and `pnpm test:cinderling`. Install Chromium and its system dependencies once with `pnpm setup:browser`. With PostgreSQL running, `pnpm e2e` runs the Gherkin acceptance scenario and Playwright browser tests on desktop and mobile Chromium against the real website and backend. `pnpm test:browser` runs just the browser suite; it applies migrations and starts and stops its own application processes. Set `E2E_WEBSITE_PORT` and `E2E_BACKEND_PORT` if the defaults (4317 and 4318) are in use. The browser suite uses the configured `DATABASE_URL`, so use a dedicated test database when isolation is required.
+Run `pnpm test`, `pnpm type-check`, `pnpm test:arch`, and `pnpm test:pets-and-found`. Install Chromium and its system dependencies once with `pnpm setup:browser`. With PostgreSQL running, `pnpm e2e` runs the Gherkin acceptance scenario and Playwright browser tests on desktop and mobile Chromium against the real website and backend. `pnpm test:browser` runs just the browser suite; it applies migrations and starts and stops its own application processes. Set `E2E_WEBSITE_PORT` and `E2E_BACKEND_PORT` if the defaults (4317 and 4318) are in use. The browser suite uses the configured `DATABASE_URL`, so use a dedicated test database when isolation is required.
 
 Cinderling `v0.1.0-beta.7` is installed. The architecture workflow and consumer installation guide are adapted; three release-managed issue evidence pages are retired under the scoped draft in `docs/decision-drafts/00017-retire-kit-evidence-from-consumer.md`. Review these adaptations during upgrades.

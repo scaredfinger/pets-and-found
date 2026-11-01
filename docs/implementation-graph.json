@@ -89,7 +89,7 @@
     },
     "tooling": {
       "kind": "package-unit",
-      "package": "cinderling-scaffold",
+      "package": "pets-and-found",
       "children": {
         "workspace": {
           "files": [
@@ -167,7 +167,7 @@
     "ci": {
       "kind": "configuration",
       "files": [".github/workflows/architecture.yml"],
-      "tests": ["pnpm test", "pnpm test:arch", "pnpm test:cinderling", "pnpm e2e", "pnpm build"]
+      "tests": ["pnpm test", "pnpm test:arch", "pnpm test:pets-and-found", "pnpm e2e", "pnpm build"]
     },
     "browser-tests": {
       "kind": "test-suite",

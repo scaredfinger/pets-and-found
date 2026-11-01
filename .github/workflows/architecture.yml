@@ -19,7 +19,7 @@ jobs:
           version: 10.32.1
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
-      - run: pnpm test:cinderling
+      - run: pnpm test:pets-and-found
       - run: pnpm db:up
       - run: pnpm setup:browser
       - run: pnpm e2e

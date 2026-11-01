@@ -23,7 +23,7 @@ export function createWebsite(backendUrl: string) {
       if (!result.ok) throw new Error('Backend unavailable')
       const { message } = await result.json() as { message: string }
       response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-      response.end(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Cinderling scaffold</title></head><body><main><h1>${escapeHtml(message)}</h1><form><label>Name <input name="name"></label><button>Greet</button></form></main></body></html>`)
+      response.end(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pets and Found</title></head><body><main><h1>${escapeHtml(message)}</h1><form><label>Name <input name="name"></label><button>Greet</button></form></main></body></html>`)
     } catch {
       response.writeHead(502, { 'content-type': 'text/plain; charset=utf-8' }).end('Backend unavailable')
     }
