@@ -27,5 +27,5 @@ test('visitor can publish, filter, and view a redacted animal report', async ({ 
   await page.getByLabel('Type').selectOption('lost')
   await page.getByLabel('Species').selectOption('dog')
   await page.getByRole('button', { name: 'Filter' }).click()
-  await expect(page.getByRole('link', { name: 'lost dog' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'lost dog' }).first()).toBeVisible()
 })
