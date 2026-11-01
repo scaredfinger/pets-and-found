@@ -22,4 +22,5 @@ export async function checkDatabase(pool: pg.Pool): Promise<void> {
   }
   await pool.query('SELECT 1 FROM greetings LIMIT 1')
   await pool.query('SELECT 1 FROM greeting_templates LIMIT 1')
+  await pool.query('SELECT 1 FROM animal_reports LIMIT 1')
 }

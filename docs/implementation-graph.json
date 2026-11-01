@@ -145,14 +145,16 @@
       "package": "@scaffold/acceptance",
       "children": {
         "scenario": {
-          "files": [
-            "tests/acceptance/features/greeting.feature",
-            "tests/acceptance/features/greeting.ts",
-            "tests/acceptance/features/database.feature",
-            "tests/acceptance/features/database.ts",
-            "tests/acceptance/features/pool-recovery.feature",
-            "tests/acceptance/features/pool-recovery.ts"
-          ],
+            "files": [
+              "tests/acceptance/features/greeting.feature",
+              "tests/acceptance/features/greeting.ts",
+              "tests/acceptance/features/database.feature",
+              "tests/acceptance/features/database.ts",
+              "tests/acceptance/features/pool-recovery.feature",
+              "tests/acceptance/features/pool-recovery.ts",
+              "tests/acceptance/features/reports.feature",
+              "tests/acceptance/features/reports.ts"
+            ],
           "tests": [
             "pnpm --filter @scaffold/acceptance test"
           ]
