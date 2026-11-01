@@ -1,5 +1,5 @@
 {
-  "name": "Cinderling — Node 24 / OpenCode",
+  "name": "Pets and Found — Node 24 / OpenCode",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
   "workspaceFolder": "/workspace",
