@@ -6,7 +6,7 @@ A TypeScript pnpm and Nx monorepo with a backend, website, greeting and database
 
 ## Start locally
 
-Requires Node 24, pnpm 10 and Docker Compose. Run `pnpm install`, `pnpm db:up`, and `pnpm db:migrate`. Start the backend with `pnpm dev:backend` and the website with `pnpm dev:website`; open http://localhost:3000. The backend fails to start until the database is reachable, all bundled migrations have matching ledger checksums, and the required tables are accessible. `GET http://localhost:3001/ready` checks the same conditions; this is not a complete schema-drift check.
+Requires Node 24, pnpm 10 and Docker Compose. Run `pnpm install` and `pnpm dev:stack`, then open http://localhost:5173. The backend defaults to http://localhost:3000. The backend fails to start until the database is reachable, all bundled migrations have matching ledger checksums, and the required tables are accessible. `GET http://localhost:3000/ready` checks the same conditions; this is not a complete schema-drift check.
 
 The local database defaults to `postgresql://scaffold:scaffold@localhost:55432/scaffold`. Set `DATABASE_URL` to override it, and set `DB_PORT` when starting Compose if a different host port is required. Set `BACKEND_PORT`, `WEBSITE_PORT` or `BACKEND_URL` to change application defaults. From a devcontainer using the host Docker socket, start Compose with `DB_BIND_ADDRESS=0.0.0.0 pnpm db:up` and set `DATABASE_URL=postgresql://scaffold:scaffold@host.docker.internal:55432/scaffold` for migration and application commands. This bind exposes the local development database on host network interfaces.
 

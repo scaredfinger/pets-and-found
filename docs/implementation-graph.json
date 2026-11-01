@@ -97,6 +97,11 @@
             "tools/shared.mjs"
           ]
         },
+        "development-stack": {
+          "files": [
+            "tools/dev-stack.mjs"
+          ]
+        },
         "decisions": {
           "files": [
             "tools/decisions.mjs"
