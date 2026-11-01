@@ -1,9 +1,9 @@
 ---
-id: "DRAFT"
+id: "00019"
 title: "Development stack launcher"
 category: project
 type: architecture
-status: draft
+status: accepted
 date: 2026-11-01
 tags: [development, database, workflow]
 dependsOn: []

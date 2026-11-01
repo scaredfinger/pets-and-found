@@ -1,9 +1,9 @@
 ---
-id: "DRAFT"
+id: "00018"
 title: "Database migration readiness"
 category: governance
 type: architecture
-status: draft
+status: accepted
 date: 2026-10-31
 tags: [database, migration, readiness]
 dependsOn: ["00015"]
@@ -21,7 +21,7 @@ Checking only the first table allowed a partially migrated schema to appear read
 
 # Decision
 
-Before listening and for each readiness probe, verify database connectivity, every bundled migration's ledger entry and checksum, and access to the greetings and greeting_templates tables. A missing or changed migration or inaccessible required table means not ready. Startup fails; readiness responds with HTTP 503.
+Before listening and for each readiness probe, verify database connectivity, every bundled migration's ledger entry and checksum, and access to the greetings, greeting_templates, and animal_reports tables. A missing or changed migration or inaccessible required table means not ready. Startup fails; readiness responds with HTTP 503.
 
 # Rationale
 

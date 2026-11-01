@@ -67,3 +67,21 @@ For agent-operated GitHub requests, validate the current checkout's credential-b
 Source: [00015](../decisions/00015-adoption-v0.1.0-beta.7.md)
 
 Adopt exact private Cinderling release v0.1.0-beta.7. OpenCode definitions archived at .cinderling/legacy/v0.1.0-beta.7: none. Retain decisions: none; retire decisions: none. Fresh-session verification is required.
+
+## TypeScript application and library source
+
+Source: [00016](../decisions/00016-typescript-application-and-library-source.md)
+
+Application, library and acceptance implementation and tests use TypeScript, enforced by workspace checks; managed tooling and configuration entry points may use JavaScript.
+
+## Retire kit evidence pages from this consumer
+
+Source: [00017](../decisions/00017-retire-kit-evidence-pages-from-this-consumer.md)
+
+Kit issue evidence stays in the Cinderling repository, not this consumer. Installation guidance points to the source repository while historical accepted records remain immutable.
+
+## Database migration readiness
+
+Source: [00018](../decisions/00018-database-migration-readiness.md)
+
+Backend startup and readiness require a reachable database, matching ledger entries for all bundled migrations, and accessible required tables; incomplete or mismatched state fails closed.

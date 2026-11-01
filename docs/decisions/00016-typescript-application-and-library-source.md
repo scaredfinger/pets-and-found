@@ -1,9 +1,9 @@
 ---
-id: "DRAFT"
+id: "00016"
 title: "TypeScript application and library source"
 category: governance
 type: architecture
-status: draft
+status: accepted
 date: 2026-10-31
 tags: [typescript, workspace, source]
 dependsOn: ["00002"]
