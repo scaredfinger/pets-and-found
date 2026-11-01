@@ -18,6 +18,7 @@
   "scripts": {
     "dev:backend": "pnpm --filter @scaffold/backend start",
     "dev:website": "pnpm --filter @scaffold/website start",
+    "dev:stack": "node tools/dev-stack.mjs",
     "build": "pnpm type-check",
     "type-check": "tsc --noEmit",
     "lint": "pnpm test:arch && pnpm type-check",

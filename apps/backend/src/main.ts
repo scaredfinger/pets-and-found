@@ -8,7 +8,7 @@ try {
   await pool.end()
   throw new Error('Database unavailable or not migrated', { cause: error })
 }
-const port = Number(process.env.BACKEND_PORT || 3001)
+const port = Number(process.env.BACKEND_PORT || 3000)
 const server = createBackend(pool).listen(port, () => {
   const address = server.address()
   if (!address || typeof address === 'string') throw new Error('Missing server address')

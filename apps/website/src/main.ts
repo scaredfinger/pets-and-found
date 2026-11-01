@@ -1,7 +1,7 @@
 import { createWebsite } from './server.ts'
 
-const port = Number(process.env.WEBSITE_PORT || 3000)
-const backend = process.env.BACKEND_URL || 'http://localhost:3001'
+const port = Number(process.env.WEBSITE_PORT || 5173)
+const backend = process.env.BACKEND_URL || 'http://localhost:3000'
 const server = createWebsite(backend).listen(port, () => {
   const address = server.address()
   if (!address || typeof address === 'string') throw new Error('Missing server address')
