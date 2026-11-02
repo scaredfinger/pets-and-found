@@ -49,6 +49,18 @@ Then('the backend rejects incomplete or damaged migration state', async function
     assert.equal((await fetch(url)).status, 200)
     await pool.query('DROP TABLE greeting_templates')
     assert.equal((await fetch(url)).status, 503)
+    await pool.query("DELETE FROM schema_migrations WHERE name = '003-create-greeting-templates.sql'")
+    await migrate(pool)
+    assert.equal((await fetch(url)).status, 200)
+    const animalMigration = await pool.query<{ checksum: string }>("SELECT checksum FROM schema_migrations WHERE name = '004-create-animal-reports.sql'")
+    await pool.query("DELETE FROM schema_migrations WHERE name = '004-create-animal-reports.sql'")
+    assert.equal((await fetch(url)).status, 503)
+    assert.notEqual(startup().status, 0)
+    await pool.query("INSERT INTO schema_migrations (name, checksum) VALUES ('004-create-animal-reports.sql', $1)", [animalMigration.rows[0].checksum])
+    assert.equal((await fetch(url)).status, 200)
+    await pool.query('DROP TABLE animal_reports')
+    assert.equal((await fetch(url)).status, 503)
+    assert.notEqual(startup().status, 0)
   } finally {
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
   }
