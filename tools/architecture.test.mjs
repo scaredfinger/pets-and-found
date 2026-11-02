@@ -75,18 +75,6 @@ test('decision validation rejects missing metadata, references, duplicate IDs an
   assert.match(decisions(root, { immutable: false }).errors.join('\n'), /compaction missing/);
 });
 
-test('decision validation excludes superseded records from active compactions', () => {
-  const root = decisionFixture();
-  put(root, 'docs/decisions/00001-replacement.md', record('00001', 'accepted', 'Replacement').replace('supersedes: []', 'supersedes: ["00000"]'));
-  put(root, 'docs/decisions/index.md', '# Accepted decisions\n\n| ID | Title | Category |\n|---|---|---|\n| 00000 | Example | governance |\n| 00001 | Replacement | governance |\n\nEnd.\n');
-  put(root, 'docs/architecture/governance.md', '# governance\n\nSources: ADRs 00000\n\n## Current\n\nRule.\n\nSource: [00001]\n');
-  assert.deepEqual(decisions(root, { immutable: false }).errors, []);
-  put(root, 'docs/architecture/governance.md', '# governance\n\n## Current\n\nRule.\n\nSource: [00000]\n\nSource: [00001]\n');
-  assert.match(decisions(root, { immutable: false }).errors.join('\n'), /superseded category compaction retains source/);
-  put(root, 'docs/architecture/governance.md', '# governance\n\n### Current\n\nSources: ADRs 00000, 00001\n');
-  assert.match(decisions(root, { immutable: false }).errors.join('\n'), /superseded category compaction retains source/);
-});
-
 test('graph rejects ambiguous ownership, missing files, dangling refs and dependency cycles', () => {
   const root = graphFixture();
   const file = path.join(root, 'docs/implementation-graph.json');

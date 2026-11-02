@@ -148,17 +148,10 @@ export const decisions = (root, { base = 'main', immutable = true, validateDraft
   const index = fs.existsSync(path.join(root, 'docs/decisions/index.md')) ? read(root, 'docs/decisions/index.md') : '';
   const entries = [...index.matchAll(/^\| (\d{5}) \| ([^|]+) \| ([^|]+) \|$/gm)];
   if (entries.length !== accepted.length || new Set(entries.map(entry => entry[1])).size !== entries.length) errors.push('docs/decisions/index.md: unexpected or duplicate entries');
-  const superseded = new Set(records.filter(item => accepted.includes(item.file)).flatMap(item => item.data.supersedes));
   for (const record of records.filter(item => accepted.includes(item.file))) {
     if (!index.includes(`| ${record.data.id} | ${record.data.title} | ${record.data.category} |`)) errors.push(`${record.file}: index entry missing`);
     const compaction = `docs/architecture/${record.data.category}.md`;
-    const text = fs.existsSync(path.join(root, compaction)) ? read(root, compaction) : '';
-    if (superseded.has(record.data.id)) {
-      const activeSections = text.split(/^##+ [^\n]+\n/m).slice(1).join('\n');
-      if (new RegExp(`^Sources?: [^\\n]*\\b${record.data.id}\\b`, 'm').test(activeSections)) errors.push(`${record.file}: superseded category compaction retains source ${record.data.id}`);
-      continue;
-    }
-    if (!text.includes(record.data.id)) errors.push(`${record.file}: category compaction missing source ${record.data.id}`);
+    if (!fs.existsSync(path.join(root, compaction)) || !read(root, compaction).includes(record.data.id)) errors.push(`${record.file}: category compaction missing source ${record.data.id}`);
   }
   if (immutable) {
     try {
