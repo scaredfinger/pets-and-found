@@ -252,9 +252,9 @@
       "kind": "consumer",
       "children": {
         "domain": {
-          "files": [
-            "docs/architecture/project-domain.md"
-          ]
+            "files": [
+              "docs/architecture/project.md"
+            ]
         }
       }
     }
