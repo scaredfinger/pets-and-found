@@ -18,5 +18,12 @@
 | 00012 | Allow temporary directory access | governance |
 | 00013 | Conventional issue branch naming | governance |
 | 00014 | Cross-repository GitHub request targets | governance |
+| 00016 | TypeScript application and library source | governance |
+| 00017 | Retire kit evidence pages from this consumer | governance |
+| 00018 | Development stack launcher | project |
+| 00019 | Cinderling migration v0.1.0-beta.8 | governance |
+| 00020 | Cinderling v0.1.0-beta.8 integration reconciliation | governance |
+| 00021 | Complete Cinderling beta.8 runtime and validation integration | governance |
+| 00022 | Database migration readiness | governance |
 
 These are the baseline accepted ADRs of the *kit repository*, not fixed IDs imposed on downstream repositories. See `docs/decisions/template.md`. Accepted ADRs are append-only. 

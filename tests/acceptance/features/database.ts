@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { Given, Then, After } from '@cucumber/cucumber'
 import { checkDatabase, createDatabase, databaseUrl, migrate } from '@scaffold/db'
-import { createBackend } from '@scaffold/backend'
+import { createBackend } from 'backend'
 import type pg from 'pg'
 
 type SchemaWorld = { admin?: pg.Pool, pool?: pg.Pool, schema?: string, url?: string }

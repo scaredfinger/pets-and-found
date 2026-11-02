@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["apps/**/*.ts", "libs/**/*.ts", "tests/**/*.ts"]
+  "include": ["apps/**/*.ts", "libs/**/*.ts", "tests/**/*.ts", "tools/runtime-preflight.ts"]
 }

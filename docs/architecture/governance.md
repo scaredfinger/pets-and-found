@@ -1,69 +1,87 @@
 # Governance — compacted current rules
 
-Sources: ADRs 00000, 00001, 00002, 00003, 00004, 00005, 00006, 00007, 00008. ADR 00007 supersedes ADR 00004; ADR 00006 supersedes ADR 00003. This document is manually reviewed; promotion tooling appends reviewed, source-linked rules.
+Baseline: accepted project ADRs 00000–00022. ADR 00007 supersedes 00004 and ADR 00006 supersedes 00003. Migration sources: [beta.8 migration](../decisions/00019-cinderling-migration-v0-1-0-beta-8.md), [workspace reconciliation](../decisions/00020-cinderling-v0-1-0-beta-8-integration-reconciliation.md), and [validation completion](../decisions/00021-complete-cinderling-beta-8-runtime-and-validation-integration.md).
 
-- Accepted decisions are immutable; create editable drafts under `docs/decision-drafts` and promote explicitly after validation.
-- Keep a unique five-digit ID, stable title, status, primary category, tags, dependsOn/supersedes/related, and provenance. On promotion update the accepted index and impacted compaction.
-- Only `governance` is a kit-defined category. Consumer project domains choose their own categories.
-- Routine commands load current operational guidance and architecture compactions, not decision indexes, accepted ADRs, or decision drafts. Load specific decision records only for decision work or a conflict requiring their history.
-- Changes to kit-managed artifacts require a reviewed migration and adoption/version record. Do not silently overwrite project overrides.
-- The official execution environment is a Node 24 devcontainer with pnpm and Nx. OpenCode host configuration/auth is separate from ignored local state; overlapping mounts are intentional.
-- Agent-operated GitHub REST workflows load the GitHub authentication skill. It validates the credential-bearing HTTPS origin push remote, keeps credentials in process and request-scoped, never logs, persists, or changes them, and fails closed when unavailable or unauthorized. Consumer release downloads use explicitly supplied private-repository authorization as specified in ADR 00007.
-- Implementation source has zero comments; lint as architecture evaluation. Human documentation is outside source.
-- Gherkin and its step definitions are colocated within the acceptance project; unit tests with source; architecture tests enforce policies.
-- Semantic graph is JSON; git/package manifests supply discoverable facts, graph supplies semantic edges. Blast radius is advisory and reviewed.
-- `prime` and `solve` follow the Calimero flow. No automatic PR merges.
+## Decision lifecycle and implementation context
 
-## Private GitHub Release distribution
+Sources: [00000](../decisions/00000-decision-records-and-governance.md), [00001](../decisions/00001-phoenix-artifacts-and-evaluations.md), [00005](../decisions/00005-selective-command-context-loading.md), [scoped completion](../decisions/00021-complete-cinderling-beta-8-runtime-and-validation-integration.md).
 
-Source: [00007](../decisions/00007-private-github-release-distribution.md)
+Accepted decisions are immutable. Author scoped drafts first; promote only after semantic review, validation and explicit approval. Keep unique five-digit accepted IDs, stable titles, status, primary category, tags, dependency/supersession/related references and provenance. New drafts require a meaningful top-level AI Summary and Effective Architecture prose; preserve legacy accepted records. Update the accepted registry and reconcile affected compactions on promotion. Only governance is kit-defined; project domains own their categories.
 
-Distribute Cinderling only as a versioned archive attached to a private GitHub Release whose tag is on validated main history. Require an explicit version and authenticated private-repository access for installation; the consumer CLI uses a request-scoped `GH_TOKEN`, while agent-operated GitHub REST workflows follow ADR 00006. Record installed versions in project metadata and immutable adoption/migration decisions; protect project overrides and provide dry-run upgrades. Never publish to npm or silently select latest.
+Use current operational guidance and relevant category compactions for implementation. Consult only decision records required for decision creation, review, promotion or supersession. Assess direct requests and issue-driven work for governance, architecture or workflow changes and create or update scoped drafts when needed. Ordinary implementation details do not require a new decision. Scoped drafts are not promoted architecture.
 
-## Exact PR closing references for combined issue resolution
+Implementation source has zero comments. Gherkin and step definitions are colocated in the acceptance project; unit tests are colocated with source. Package manifests provide discoverable identities, the JSON semantic graph supplies reviewed relationships, and impact is advisory. Do not introduce project.json or Nx-specific semantic identities.
 
-Source: [00008](../decisions/00008-exact-pr-closing-references-for-combined-issue-resolution.md)
+## Reviewed private-release installation
 
-For a solve PR, normalize the authorized resolved issue set, require exactly one standalone closing line per resolved issue and none for other issues, check immediately before creation, and verify the persisted PR body. Keep PRs with scoped unpromoted ADRs in draft and never merge automatically.
+Sources: [00007](../decisions/00007-private-github-release-distribution.md), [00015](../decisions/00015-adoption-v0.1.0-beta.7.md), [scoped migration](../decisions/00019-cinderling-migration-v0-1-0-beta-8.md).
 
-## Project-local OpenCode definition ownership
+Use only an explicit versioned archive from the private Cinderling GitHub Release; never npm or implicit latest. Use the target release bootstrap and independently trusted digest, complete a stale-state-bound review, preserve project overrides, classify every release path and removed asset explicitly, and record distinct previous/target evidence. Supplied archives need no download token; CLI downloads use a process-environment GH_TOKEN authorized for scaredfinger/cinderling. Installation never promotes decisions or rewrites accepted history. Keep reproducible adaptation sources and review the diff.
 
-Source: [00009](../decisions/00009-project-local-opencode-definition-ownership.md)
+The project adopted v0.1.0-beta.7 under ADR 00015 and upgrades to v0.1.0-beta.8 under the scoped migration. Retire the three obsolete kit evidence pages; preserve ADR 00010 byte-for-byte, with its local evidence reference superseded by the scoped migration. Kit issue evidence belongs in the kit repository.
 
-Cinderling owns the project-local OpenCode agents, skills and commands it distributes. On initialization and upgrade, inventory existing definitions and require explicit retain or retire decisions before removing their active entry points; archive both choices outside discovery and install Cinderling replacements at colliding paths. Require a private external backup for migrated definitions, preserve project-local MCP configuration and executables and project-owned architecture and code, and do not inspect or modify user-level configuration. Fail closed when project-local discovery cannot be resolved safely. Retained legacy definitions are preserved for review, not kept active as a competing harness.
+## Harness ownership and recovery
 
-## Endpoint-aware GitHub interaction and CI evidence
+Sources: [00009](../decisions/00009-project-local-opencode-definition-ownership.md), [scoped completion](../decisions/00021-complete-cinderling-beta-8-runtime-and-validation-integration.md).
 
-Source: [00010](../decisions/00010-endpoint-aware-github-interaction-and-ci-evidence.md)
+Cinderling owns its distributed project-local definitions. Inventory competing definitions and explicitly retain or retire each; both archive the original outside discovery and remove its active entry point before installing kit replacements. Preserve project-owned assets, MCP configuration and executables; leave user configuration and authentication untouched. Fail closed on unresolved discovery. The scoped completion supersedes ADR 00009's mandatory external export with transactional local staging and rollback and optional external export. Preserve untracked, ignored, modified or secret-bearing legacy material deliberately. Verify discovery in a fresh OpenCode process.
 
-For agent-operated GitHub interactions, load the authentication and interaction skills. Preserve ADR 00006's credential and authorization rules and ADR 00008's PR body contract. Select endpoint-specific least privileges, isolate and report denied requests safely, and fail closed on required failures. Verify current-head Actions runs and expected jobs independently; a denied optional Checks endpoint is not a pass, and external checks remain unverified without their own evidence. Never merge automatically.
+## Workspace and validation
 
-## Project test command contract and solve validation gates
+Sources: [00002](../decisions/00002-devcontainer-and-workspace.md), [00011](../decisions/00011-project-test-command-contract-and-solve-validation-gates.md), [workspace reconciliation](../decisions/00020-cinderling-v0-1-0-beta-8-integration-reconciliation.md), [scoped completion](../decisions/00021-complete-cinderling-beta-8-runtime-and-validation-integration.md).
 
-Source: [00011](../decisions/00011-project-test-command-contract-and-solve-validation-gates.md)
+Use Node 24, pnpm and Nx package-script inference. Backend and website have unscoped manifest-derived identities, libraries retain the @scaffold scope, and the graph classifies application roles. Packages expose build, test and lint; applications also expose dev and e2e, and the website exposes start. Existing project command implementations remain project-owned.
 
-Expose `pnpm test` for all unit tests, `pnpm test:arch` for all architecture tests, `pnpm test:cinderling` for Cinderling-specific validation and `pnpm e2e` for project-owned end-to-end coverage. During implementation run affected checks; before candidate review run the first three commands; after review and before merge arrange e2e on the reviewed exact head. Candidate changes invalidate earlier final-gate evidence. Report unavailable or deferred e2e as pending or blocked, never as passed, and retain project ownership of command implementations and e2e infrastructure.
+The scoped completion supersedes ADR 00011's command surface: run pnpm test:all for unit tests, pnpm test:arch for architecture and language policies, and pnpm test:cinderling for portable tool checks before candidate review. pnpm test remains the all-unit alias. Run lint and build. The real project acceptance and desktop/mobile browser suite is required through pnpm e2e:all (pnpm e2e alias) on the reviewed candidate before merge. Missing or deferred required evidence is pending or blocked, never passed. Candidate changes invalidate final-gate evidence. Preserve the project CI database and browser setup steps; do not substitute kit fixtures for project e2e.
 
-## Allow temporary directory access
+## Runtime, development stack and optional skills
 
-Source: [00012](../decisions/00012-allow-temporary-directory-access.md)
+Sources: [00002](../decisions/00002-devcontainer-and-workspace.md), [scoped migration](../decisions/00019-cinderling-migration-v0-1-0-beta-8.md), [scoped completion](../decisions/00021-complete-cinderling-beta-8-runtime-and-validation-integration.md).
 
-The Cinderling kit's project-local OpenCode configuration allows external-directory access to `/tmp` and `/tmp/*`. Agents may use `/tmp` for temporary work without asking the user for permission. This kit-specific configuration is not implicitly imposed on consumer projects.
+Preserve intentionally nested mounts and host-owned authentication overlays. Before service-, database-, browser- or container-dependent work, load devcontainer-runtime and follow docs/runtime.md. Verify connectivity, authentication, migrations and browser launch from the actual runner using pnpm runtime:preflight. Apply documented recoverable setup, preserve data and routes, and do not infer readiness from container health. Fresh-host rebuild evidence remains separate from current-runner evidence.
 
-## Conventional issue branch naming
+Use the installed stack runner with project-owned dev-stack.json: ordered migration then backend and website development processes, with seeding only when explicitly configured and requested. Preserve ports 3000 and 5173 and browser-test ports 4318 and 4317. Load application-development-ports for new applications or port/URL changes; use devcontainer forwarding for application access. Clerk guidance is on demand and does not select an authentication provider.
 
-Source: [00013](../decisions/00013-conventional-issue-branch-naming.md)
+## GitHub and change workflow
 
-Before creating a new issue branch, load the branch-naming skill. Name it `<type>/<issue-numbers>-<description>`, using a conventional change type, each approved positive issue number once in ascending numeric order separated by hyphens, and a concise lowercase kebab-case description. Validate the name as a Git branch; do not require existing branches to be renamed.
+Sources: [00006](../decisions/00006-github-authentication-skill-and-change-workflow.md), [00008](../decisions/00008-exact-pr-closing-references-for-combined-issue-resolution.md), [00010](../decisions/00010-endpoint-aware-github-interaction-and-ci-evidence.md), [00013](../decisions/00013-conventional-issue-branch-naming.md), [00014](../decisions/00014-cross-repository-github-request-targets.md).
 
-## Cross-repository GitHub request targets
+Load GitHub authentication and interaction skills before agent-operated GitHub requests. Validate the credential-bearing HTTPS origin push URL in process and validate an explicit request target separately. Credentials are request-scoped, never printed or persisted; do not change remotes or authentication. Require explicit authorization for mutations and fail closed on required denied requests. Verify exact-head Actions runs and expected jobs independently; denied optional Checks are not passes. Preserve ADR 00010's CI requirements while its obsolete evidence link remains immutable historical content.
 
-Source: [00014](../decisions/00014-cross-repository-github-request-targets.md)
+Load branch-naming before creating an issue branch: use a conventional type, each approved positive issue number once in ascending order, and concise lowercase kebab-case description; validate with Git. Do not rename existing branches automatically. Follow prime/solve, require exactly one standalone closing line per approved resolved issue in solve PRs, verify the persisted body and keep PRs with scoped unpromoted decisions in draft. Never merge automatically. ADR 00012's temporary-directory access is kit-specific and not automatically imposed on consumers.
 
-For agent-operated GitHub requests, validate the current checkout's credential-bearing HTTPS origin push URL as the credential source and identify the request target separately. An explicitly selected target repository may differ from the origin; use the request-scoped origin-derived credential only for an authorized operation with access to that target. Validate the target and operation, require explicit authorization for mutations, and fail closed on ambiguity, denied access or required request failure. Never expose or persist credentials or silently change authentication sources or remotes. Consumer CLI release authentication remains separate.
+## TypeScript application and library source
 
-## Cinderling adoption v0.1.0-beta.7
+Source: [00016](../decisions/00016-typescript-application-and-library-source.md)
 
-Source: [00015](../decisions/00015-adoption-v0.1.0-beta.7.md)
+Application, library and acceptance implementation and tests use TypeScript, enforced by workspace checks; managed tooling and configuration entry points may use JavaScript.
 
-Adopt exact private Cinderling release v0.1.0-beta.7. OpenCode definitions archived at .cinderling/legacy/v0.1.0-beta.7: none. Retain decisions: none; retire decisions: none. Fresh-session verification is required.
+## Retire kit evidence pages from this consumer
+
+Source: [00017](../decisions/00017-retire-kit-evidence-pages-from-this-consumer.md)
+
+Kit issue evidence stays in the Cinderling repository, not this consumer. Installation guidance points to the source repository while historical accepted records remain immutable.
+
+## Cinderling migration v0.1.0-beta.8
+
+Source: [00019](../decisions/00019-cinderling-migration-v0-1-0-beta-8.md)
+
+This project upgrades through explicit-version, digest-verified, stale-state-checked Cinderling reviews. Accepted decisions remain immutable. Kit issue evidence is retired from the consumer while accepted historical references remain as superseded history. The project owns its packages, graph, validation commands, runtime configuration, and application topology. The managed development stack invokes the project database migration before the backend and website processes. Runtime-, database-, browser-, and container-dependent work loads the devcontainer-runtime skill and validates readiness from the actual runner. The application-development-ports skill preserves the existing project assignments, and Clerk guidance is available only if the project adopts Clerk.
+
+## Cinderling v0.1.0-beta.8 integration reconciliation
+
+Source: [00020](../decisions/00020-cinderling-v0-1-0-beta-8-integration-reconciliation.md)
+
+Same-version reconciliation uses the installed release fingerprint and an explicit reviewed draft. Applications have manifest-derived unscoped identities, package build, test, lint, development, and end-to-end targets, and graph classifications. Project-wide command implementations remain project-owned. The development stack runner and configuration have exactly one semantic owner.
+
+## Complete Cinderling beta.8 runtime and validation integration
+
+Source: [00021](../decisions/00021-complete-cinderling-beta-8-runtime-and-validation-integration.md)
+
+Run unit tests, architecture checks, portable Cinderling checks, lint and build before candidate review; run the real acceptance and browser e2e suite against the reviewed candidate before merge. Database and browser work follows the runtime skill and the project preflight from the actual runner. Preserve service routes, nested mounts, host-owned authentication, project package identity, tests and graph. Existing kit definitions are managed; competing definitions require explicit dispositions and local recovery, with external export optional. Accepted decisions remain immutable and promotion requires separate explicit review and approval.
+
+## Database migration readiness
+
+Source: [00022](../decisions/00022-database-migration-readiness.md)
+
+Backend startup and readiness require a reachable database, matching ledger entries for all bundled migrations, and accessible required tables; incomplete or mismatched state fails closed.

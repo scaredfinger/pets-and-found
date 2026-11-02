@@ -1,5 +1,11 @@
 {
   "version": 1,
+  "workspacePolicyVersion": 1,
+  "libraryScope": "@scaffold",
+  "applications": {
+    "backend": "api",
+    "website": "web"
+  },
   "units": {
     "documentation": {
       "kind": "documentation",
@@ -7,6 +13,11 @@
         "governance-compaction": {
           "files": [
             "docs/architecture/governance.md"
+          ]
+        },
+        "agent-guidance": {
+          "files": [
+            "AGENTS.md"
           ]
         },
         "consumer-installation": {
@@ -18,6 +29,12 @@
           "files": [
             "docs/devcontainer.md"
           ]
+        },
+        "runtime": {
+          "files": ["docs/runtime.md"]
+        },
+        "migration-sources": {
+          "globs": ["docs/migrations/**", "docs/decision-drafts/**"]
         }
       }
     },
@@ -63,6 +80,21 @@
                 ".opencode/skills/github-interaction/SKILL.md"
               ]
             },
+            "devcontainer-runtime": {
+              "files": [
+                ".opencode/skills/devcontainer-runtime/SKILL.md"
+              ]
+            },
+            "application-development-ports": {
+              "files": [
+                ".opencode/skills/application-development-ports/SKILL.md"
+              ]
+            },
+            "clerk-authentication": {
+              "files": [
+                ".opencode/skills/clerk-authentication/SKILL.md"
+              ]
+            },
             "pr-creation": {
               "files": [
                 ".opencode/skills/pr-creation/SKILL.md"
@@ -97,9 +129,13 @@
             "tools/shared.mjs"
           ]
         },
-        "development-stack": {
+        "dev-stack": {
           "files": [
-            "tools/dev-stack.mjs"
+            "tools/dev-stack.mjs",
+            "dev-stack.json"
+          ],
+          "tests": [
+            "pnpm test:cinderling"
           ]
         },
         "decisions": {
@@ -129,6 +165,13 @@
             "tools/distribution.mjs",
             "tools/cinderling.mjs"
           ]
+        },
+        "installation": {
+          "files": ["tools/installation.mjs", "tools/bootstrap.mjs"]
+        },
+        "runtime-preflight": {
+          "files": ["tools/runtime-preflight.ts", "tsconfig.json"],
+          "tests": ["pnpm runtime:preflight"]
         },
         "pr-body": {
           "files": [
@@ -183,15 +226,15 @@
     },
     "backend": {
       "kind": "package-unit",
-      "package": "@scaffold/backend",
+      "package": "backend",
       "globs": ["apps/backend/src/**"],
-      "tests": ["pnpm --filter @scaffold/backend test"]
+      "tests": ["pnpm --filter backend test"]
     },
     "website": {
       "kind": "package-unit",
-      "package": "@scaffold/website",
+      "package": "website",
       "globs": ["apps/website/src/**"],
-      "tests": ["pnpm --filter @scaffold/website test"]
+      "tests": ["pnpm --filter website test"]
     },
     "greeting": {
       "kind": "package-unit",
@@ -217,6 +260,17 @@
     }
   },
   "relationships": [
+    { "from": "tooling.installation", "to": "tooling.distribution", "type": "dependsOn" },
+    { "from": "tooling.installation", "to": "tooling.decisions", "type": "dependsOn" },
+    { "from": "tooling.installation", "to": "documentation.consumer-installation", "type": "loads" },
+    { "from": "tooling.tests", "to": "tooling.installation", "type": "dependsOn" },
+    { "from": "tooling.tests", "to": "tooling.dev-stack", "type": "dependsOn" },
+    { "from": "tooling.runtime-preflight", "to": "database", "type": "dependsOn" },
+    { "from": "tooling.runtime-preflight", "to": "browser-tests", "type": "dependsOn" },
+    { "from": "documentation.runtime", "to": "tooling.runtime-preflight", "type": "dependsOn" },
+    { "from": "opencode.skills.devcontainer-runtime", "to": "documentation.runtime", "type": "loads" },
+    { "from": "opencode.commands.prime", "to": "opencode.skills.devcontainer-runtime", "type": "loads" },
+    { "from": "opencode.commands.solve", "to": "opencode.skills.devcontainer-runtime", "type": "loads" },
     { "from": "backend", "to": "greeting", "type": "dependsOn" },
     { "from": "backend", "to": "database", "type": "dependsOn" },
     { "from": "website", "to": "backend", "type": "dependsOn" },
@@ -243,6 +297,41 @@
       "from": "opencode.commands.prime",
       "to": "documentation.governance-compaction",
       "type": "loads"
+    },
+    {
+      "from": "documentation.agent-guidance",
+      "to": "opencode.skills.devcontainer-runtime",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.skills.devcontainer-runtime",
+      "to": "documentation.devcontainer",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.skills.application-development-ports",
+      "to": "opencode.skills.devcontainer-runtime",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.skills.application-development-ports",
+      "to": "documentation.consumer-installation",
+      "type": "loads"
+    },
+    {
+      "from": "opencode.skills.application-development-ports",
+      "to": "tooling.dev-stack",
+      "type": "dependsOn"
+    },
+    {
+      "from": "opencode.skills.clerk-authentication",
+      "to": "opencode.skills.devcontainer-runtime",
+      "type": "loads"
+    },
+    {
+      "from": "documentation.consumer-installation",
+      "to": "tooling.dev-stack",
+      "type": "dependsOn"
     },
     {
       "from": "opencode.commands.solve",

@@ -1,9 +1,9 @@
 ---
-id: "DRAFT"
+id: "00017"
 title: "Retire kit evidence pages from this consumer"
 category: governance
 type: architecture
-status: draft
+status: accepted
 date: 2026-10-31
 tags: [adoption, documentation, migration]
 dependsOn: ["00015"]

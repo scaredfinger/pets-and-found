@@ -16,22 +16,29 @@
     "yaml": "^2.9.1"
   },
   "scripts": {
-    "dev:backend": "pnpm --filter @scaffold/backend start",
-    "dev:website": "pnpm --filter @scaffold/website start",
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:website": "pnpm --filter website dev",
     "dev:stack": "node tools/dev-stack.mjs",
-    "build": "pnpm type-check",
+    "build": "pnpm build:all",
+    "build:all": "nx run-many --target build --all",
     "type-check": "tsc --noEmit",
-    "lint": "pnpm test:arch && pnpm type-check",
-    "test": "pnpm -r --if-present test:unit",
+    "lint": "pnpm test:arch && pnpm lint:all",
+    "lint:all": "nx run-many --target lint --all",
+    "test": "pnpm test:all",
+    "test:all": "nx run-many --target test --all --exclude @scaffold/acceptance",
     "test:arch": "node tools/check-source-language.mjs && node tools/cli.mjs check",
     "test:pets-and-found": "node --test tools/*.test.mjs",
     "test:tools": "node --test tools/*.test.mjs",
+    "test:cinderling": "pnpm test:tools",
+    "graph:impact": "node tools/cli.mjs impact",
+    "runtime:preflight": "pnpm db:migrate && tsx tools/runtime-preflight.ts",
     "db:up": "docker compose up -d --wait db",
     "db:migrate": "pnpm --filter @scaffold/db migrate",
     "db:down": "docker compose down",
     "acceptance": "pnpm --filter @scaffold/acceptance test",
     "setup:browser": "playwright install --with-deps chromium",
     "test:browser": "playwright test --config tests/browser/playwright.config.ts",
-    "e2e": "pnpm acceptance && pnpm test:browser"
+    "e2e": "pnpm acceptance && pnpm test:browser",
+    "e2e:all": "pnpm e2e"
   }
 }

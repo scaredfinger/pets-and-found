@@ -51,7 +51,7 @@ test('TypeScript scanner distinguishes comments from string and regexp literals'
 
 test('promotion requires reviewed prose and changes record, index, and compaction', () => {
   const root = decisionFixture();
-  put(root, 'docs/decision-drafts/example.md', record('DRAFT', 'draft', 'New rule').replace('Reviewed rule.', 'First rule.\n\nSecond rule.'));
+  put(root, 'docs/decision-drafts/example.md', record('DRAFT', 'draft', 'New rule').replace('# Decision', '# AI Summary\n\nRequire the reviewed rules through explicit decision promotion.\n\n# Decision').replace('Reviewed rule.', 'First rule.\n\nSecond rule.'));
   execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: root });
   execFileSync('git', ['add', 'docs/decisions/00000-example.md'], { cwd: root });
   execFileSync('git', ['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'fixture'], { cwd: root });

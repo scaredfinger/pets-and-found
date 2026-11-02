@@ -1,9 +1,9 @@
 ---
-id: "DRAFT"
+id: "00022"
 title: "Database migration readiness"
 category: governance
 type: architecture
-status: draft
+status: accepted
 date: 2026-10-31
 tags: [database, migration, readiness]
 dependsOn: ["00015"]

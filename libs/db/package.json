@@ -8,8 +8,7 @@
     "migrate": "tsx src/migrate.ts",
     "build": "tsc --noEmit -p ../../tsconfig.json",
     "lint": "tsc --noEmit -p ../../tsconfig.json",
-    "test": "tsx --test src/*.test.ts",
-    "test:unit": "tsx --test src/*.test.ts"
+    "test": "tsx --test src/*.test.ts"
   },
   "dependencies": { "pg": "^8.16.0" }
 }
