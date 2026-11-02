@@ -1,9 +1,9 @@
 ---
-id: "DRAFT"
+id: "00021"
 title: "Complete Cinderling beta.8 runtime and validation integration"
 category: governance
 type: architecture
-status: draft
+status: accepted
 date: 2026-11-02
 tags: [migration, validation, runtime]
 dependsOn: ["00015"]

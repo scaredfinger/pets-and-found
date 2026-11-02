@@ -1,9 +1,9 @@
 ---
-id: "DRAFT"
+id: "00020"
 title: "Cinderling v0.1.0-beta.8 integration reconciliation"
 category: governance
 type: architecture
-status: draft
+status: accepted
 date: 2026-11-02
 tags: [adoption, migration, reconciliation]
 dependsOn: ["00015"]

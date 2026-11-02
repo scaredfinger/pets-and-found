@@ -1,9 +1,9 @@
 ---
-id: "DRAFT"
+id: "00019"
 title: "Cinderling migration v0.1.0-beta.8"
 category: governance
 type: architecture
-status: draft
+status: accepted
 date: 2026-11-02
 tags: [adoption, migration, governance]
 dependsOn: ["00015"]

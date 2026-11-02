@@ -1,10 +1,10 @@
 # Governance — compacted current rules
 
-Baseline: accepted project ADRs 00000–00015. ADR 00007 supersedes 00004 and ADR 00006 supersedes 00003. Scoped migration sources: [beta.8 migration](../decision-drafts/00019-cinderling-migration-v0.1.0-beta.8.md), [workspace reconciliation](../decision-drafts/cinderling-v0.1.0-beta.8-reconciliation.md), and [validation completion](../decision-drafts/cinderling-beta.8-validation-completion.md). These drafts are branch-authoritative and unpromoted. This source is installed at `docs/architecture/governance.md`; links below are relative to that destination.
+Baseline: accepted project ADRs 00000–00022. ADR 00007 supersedes 00004 and ADR 00006 supersedes 00003. Migration sources: [beta.8 migration](../decisions/00019-cinderling-migration-v0-1-0-beta-8.md), [workspace reconciliation](../decisions/00020-cinderling-v0-1-0-beta-8-integration-reconciliation.md), and [validation completion](../decisions/00021-complete-cinderling-beta-8-runtime-and-validation-integration.md). This source is installed at `docs/architecture/governance.md`; links below are relative to that destination.
 
 ## Decision lifecycle and implementation context
 
-Sources: [00000](../decisions/00000-decision-records-and-governance.md), [00001](../decisions/00001-phoenix-artifacts-and-evaluations.md), [00005](../decisions/00005-selective-command-context-loading.md), [scoped completion](../decision-drafts/cinderling-beta.8-validation-completion.md).
+Sources: [00000](../decisions/00000-decision-records-and-governance.md), [00001](../decisions/00001-phoenix-artifacts-and-evaluations.md), [00005](../decisions/00005-selective-command-context-loading.md), [00021](../decisions/00021-complete-cinderling-beta-8-runtime-and-validation-integration.md).
 
 Accepted decisions are immutable. Author scoped drafts first; promote only after semantic review, validation and explicit approval. Keep unique five-digit accepted IDs, stable titles, status, primary category, tags, dependency/supersession/related references and provenance. New drafts require a meaningful top-level AI Summary and Effective Architecture prose; preserve legacy accepted records. Update the accepted registry and reconcile affected compactions on promotion. Only governance is kit-defined; project domains own their categories.
 
@@ -14,7 +14,7 @@ Implementation source has zero comments. Gherkin and step definitions are coloca
 
 ## Reviewed private-release installation
 
-Sources: [00007](../decisions/00007-private-github-release-distribution.md), [00015](../decisions/00015-adoption-v0.1.0-beta.7.md), [scoped migration](../decision-drafts/00019-cinderling-migration-v0.1.0-beta.8.md).
+Sources: [00007](../decisions/00007-private-github-release-distribution.md), [00015](../decisions/00015-adoption-v0.1.0-beta.7.md), [00019](../decisions/00019-cinderling-migration-v0-1-0-beta-8.md).
 
 Use only an explicit versioned archive from the private Cinderling GitHub Release; never npm or implicit latest. Use the target release bootstrap and independently trusted digest, complete a stale-state-bound review, preserve project overrides, classify every release path and removed asset explicitly, and record distinct previous/target evidence. Supplied archives need no download token; CLI downloads use a process-environment GH_TOKEN authorized for scaredfinger/cinderling. Installation never promotes decisions or rewrites accepted history. Keep reproducible adaptation sources and review the diff.
 
@@ -22,13 +22,13 @@ The project adopted v0.1.0-beta.7 under ADR 00015 and upgrades to v0.1.0-beta.8 
 
 ## Harness ownership and recovery
 
-Sources: [00009](../decisions/00009-project-local-opencode-definition-ownership.md), [scoped completion](../decision-drafts/cinderling-beta.8-validation-completion.md).
+Sources: [00009](../decisions/00009-project-local-opencode-definition-ownership.md), [00021](../decisions/00021-complete-cinderling-beta-8-runtime-and-validation-integration.md).
 
 Cinderling owns its distributed project-local definitions. Inventory competing definitions and explicitly retain or retire each; both archive the original outside discovery and remove its active entry point before installing kit replacements. Preserve project-owned assets, MCP configuration and executables; leave user configuration and authentication untouched. Fail closed on unresolved discovery. The scoped completion supersedes ADR 00009's mandatory external export with transactional local staging and rollback and optional external export. Preserve untracked, ignored, modified or secret-bearing legacy material deliberately. Verify discovery in a fresh OpenCode process.
 
 ## Workspace and validation
 
-Sources: [00002](../decisions/00002-devcontainer-and-workspace.md), [00011](../decisions/00011-project-test-command-contract-and-solve-validation-gates.md), [workspace reconciliation](../decision-drafts/cinderling-v0.1.0-beta.8-reconciliation.md), [scoped completion](../decision-drafts/cinderling-beta.8-validation-completion.md).
+Sources: [00002](../decisions/00002-devcontainer-and-workspace.md), [00011](../decisions/00011-project-test-command-contract-and-solve-validation-gates.md), [00020](../decisions/00020-cinderling-v0-1-0-beta-8-integration-reconciliation.md), [00021](../decisions/00021-complete-cinderling-beta-8-runtime-and-validation-integration.md).
 
 Use Node 24, pnpm and Nx package-script inference. Backend and website have unscoped manifest-derived identities, libraries retain the @scaffold scope, and the graph classifies application roles. Packages expose build, test and lint; applications also expose dev and e2e, and the website exposes start. Existing project command implementations remain project-owned.
 
@@ -36,7 +36,7 @@ The scoped completion supersedes ADR 00011's command surface: run pnpm test:all 
 
 ## Runtime, development stack and optional skills
 
-Sources: [00002](../decisions/00002-devcontainer-and-workspace.md), [scoped migration](../decision-drafts/00019-cinderling-migration-v0.1.0-beta.8.md), [scoped completion](../decision-drafts/cinderling-beta.8-validation-completion.md).
+Sources: [00002](../decisions/00002-devcontainer-and-workspace.md), [00019](../decisions/00019-cinderling-migration-v0-1-0-beta-8.md), [00021](../decisions/00021-complete-cinderling-beta-8-runtime-and-validation-integration.md).
 
 Preserve intentionally nested mounts and host-owned authentication overlays. Before service-, database-, browser- or container-dependent work, load devcontainer-runtime and follow docs/runtime.md. Verify connectivity, authentication, migrations and browser launch from the actual runner using pnpm runtime:preflight. Apply documented recoverable setup, preserve data and routes, and do not infer readiness from container health. Fresh-host rebuild evidence remains separate from current-runner evidence.
 
