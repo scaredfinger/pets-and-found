@@ -18,11 +18,12 @@ jobs:
         with:
           version: 10.32.1
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
-      - run: pnpm test:pets-and-found
+      - run: pnpm test:all
+      - run: pnpm test:cinderling
       - run: pnpm db:up
       - run: pnpm setup:browser
-      - run: pnpm e2e
+      - run: pnpm runtime:preflight
+      - run: pnpm e2e:all
       - run: pnpm lint
         env:
           ARCH_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}

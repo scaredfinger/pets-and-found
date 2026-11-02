@@ -1,0 +1,4 @@
+{
+  "migrations": [["pnpm", "db:migrate"]],
+  "apps": [["pnpm", "dev:backend"], ["pnpm", "dev:website"]]
+}

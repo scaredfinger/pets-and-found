@@ -4,10 +4,12 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
+import { ignoredDirectory } from './shared.mjs';
 
 const versionPattern = /^v\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?$/;
 const assetName = version => `cinderling-${version}.tar.gz`;
 const managed = file => file === 'package.json' || file === 'pnpm-lock.yaml' || file === 'pnpm-workspace.yaml' || file === 'nx.json' || file === 'AGENTS.md' || /^(?:tools|docs|consumer-template|\.opencode\/(?:agents|commands|skills)|\.devcontainer|\.github\/workflows)\//.test(file) && !file.startsWith('docs/decision-drafts/') && !file.startsWith('docs/combined-issues-') && !['docs/README.md', 'docs/ROADMAP.md', '.github/workflows/release.yml'].includes(file);
+const kitIssueEvidence = file => /^docs\/issue-\d+-[^/]+\.md$/.test(file);
 const consumerOwned = name => ['package.json', 'pnpm-lock.yaml', 'docs/implementation-graph.json'].includes(name) || name.startsWith('consumer-template/');
 const projectArchitecture = name => name.startsWith('docs/decisions/') || name.startsWith('docs/decision-drafts/') || name.startsWith('docs/architecture/') || name === 'docs/implementation-graph.json';
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
@@ -29,48 +31,59 @@ const safeStat = (root, name = '') => {
 };
 const consumerAsset = (source, name, root) => {
   const data = fs.readFileSync(path.join(source, name));
+  if (name === '.github/workflows/architecture.yml') return Buffer.from("name: Architecture\non:\n  pull_request:\n  push:\n    branches: [main]\njobs:\n  evaluate:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          fetch-depth: 0\n          ref: ${{ github.event.pull_request.head.sha || github.sha }}\n      - uses: actions/setup-node@v4\n        with:\n          node-version: '24'\n      - uses: pnpm/action-setup@v4\n        with:\n          version: 10.32.1\n      - run: pnpm install --frozen-lockfile\n      - run: pnpm test\n      - run: pnpm lint\n        env:\n          ARCH_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}\n      - run: pnpm test:cinderling\n      - run: pnpm build\n");
   if (name === 'package.json') {
     const manifest = JSON.parse(data);
     manifest.name = path.basename(root).toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '') || 'consumer-workspace';
-    manifest.scripts.build = 'node --check tools/cinderling.mjs';
-    manifest.scripts.test = 'node --test src/*.test.mjs && pnpm --filter consumer-acceptance test';
+    manifest.scripts.build = 'tsc --noEmit';
+    manifest.scripts['type-check'] = 'tsc --noEmit';
+    manifest.scripts.test = 'node --test src/*.test.ts && pnpm --filter consumer-acceptance test';
+    manifest.scripts.lint = 'pnpm test:arch';
+    manifest.scripts.e2e = "node -e \"console.error('Project-owned e2e suite is not configured'); process.exit(1)\"";
     return Buffer.from(JSON.stringify(manifest, null, 2) + '\n');
   }
   if (name === 'docs/implementation-graph.json') {
     const model = JSON.parse(data);
+    delete model.workspacePolicyVersion;
     delete model.units.release;
     model.relationships = model.relationships.filter(edge => edge.from !== 'release' && edge.to !== 'release');
     delete model.units['consumer-template'];
     model.relationships = model.relationships.filter(edge => edge.to !== 'consumer-template');
     delete model.units.documentation.children.roadmap;
+    model.units.documentation.children['consumer-installation'].files = model.units.documentation.children['consumer-installation'].files.filter(file => !kitIssueEvidence(file));
     delete model.units.opencode.children.permissions;
     model.units.tooling.children.graph.files = ['tools/graph.mjs', 'docs/implementation-graph.json'];
+    model.units.tooling.children.tests.files = [];
+    model.units.tooling.children.tests.tests = ['pnpm test:cinderling'];
     model.units.tooling.package = path.basename(root).toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '') || 'consumer-workspace';
     model.units.acceptance = { kind: 'package-unit', package: 'consumer-acceptance', children: { scenario: { files: ['tests/acceptance/adoption.feature', 'tests/acceptance/steps.mjs'], tests: ['pnpm --filter consumer-acceptance test'] } } };
-    model.units.project = { kind: 'consumer', children: { domain: { files: ['docs/architecture/project-domain.md'] }, implementation: { files: ['src/index.mjs', 'src/index.test.mjs'], tests: ['node --test src/*.test.mjs'] } } };
+    model.units.project = { kind: 'consumer', children: { domain: { files: ['docs/architecture/project-domain.md'] }, implementation: { files: ['src/index.ts', 'src/index.test.ts', 'tsconfig.json', 'cinderling-source-policy.json'], tests: ['node --test src/*.test.ts', 'pnpm type-check'] } } };
     model.relationships.push({ from: 'acceptance.scenario', to: 'tooling.distribution', type: 'dependsOn' });
     return Buffer.from(JSON.stringify(model, null, 2) + '\n');
   }
-  if (name === 'AGENTS.md') return Buffer.from('# Consumer operational guidance\n\nRead docs/architecture/governance.md and docs/consumer-installation.md before editing managed artifacts. Keep source comment-free and run pnpm test:arch, pnpm test, pnpm lint and pnpm build. Decisions are draft-first; accepted decisions are immutable. Preserve the devcontainer nested mounts and host-owned authentication. Consumer source, package identity and implementation graph are project-owned.\n\nCinderling is distributed as a private GitHub Release asset in scaredfinger/cinderling. For a consumer init or upgrade download, provide GH_TOKEN in the process environment with permission to read that repository; this project\'s own token or remote may not have access. If access is unavailable, stop and request authorized access. Do not print or persist the token. An already obtained release archive can be supplied with --archive. Read docs/consumer-installation.md for bootstrap and target-release upgrade instructions. Direct agent-operated GitHub REST requests follow the github-authentication skill; the consumer CLI uses GH_TOKEN separately.\n');
+  if (name === 'AGENTS.md') return Buffer.from('# Consumer operational guidance\n\nRead docs/architecture/governance.md and relevant category compactions before implementation; read docs/consumer-installation.md before editing managed artifacts. Use compactions as implementation context and follow project governance when reviewing conflicts and consulting decision records. Assess tasks for changes to governance, architectural rules or agent workflow and review any scoped decision drafts against relevant compactions. A valid scoped draft is authoritative on its branch but is not promoted architecture. Decisions are draft-first; accepted decisions are immutable. Keep source comment-free and run pnpm test:arch, pnpm test, pnpm lint and pnpm build. Preserve the devcontainer nested mounts and host-owned authentication. Consumer source, package identity and implementation graph are project-owned.\n\nBefore starting services or running database-, browser-, or container-dependent work, load and follow the devcontainer-runtime skill. Other tasks do not require it unless runtime preparation or diagnosis becomes relevant. Use project-owned documented setup and preflight.\n\nCinderling is distributed as a private GitHub Release asset in scaredfinger/cinderling. For a consumer init or upgrade download, provide GH_TOKEN in the process environment with permission to read that repository; this project\'s own token or remote may not have access. If access is unavailable, stop and request authorized access. Do not print or persist the token. An already obtained release archive can be supplied with --archive. Read docs/consumer-installation.md for bootstrap and target-release upgrade instructions. Direct agent-operated GitHub REST requests follow the github-authentication skill; the consumer CLI uses GH_TOKEN separately.\n');
   return data;
 };
 
 export const pack = (root, version, destination) => {
   ensureVersion(version);
-  const files = run('git', ['ls-files', '-z'], root).split('\0').filter(managed);
+  const files = run('git', ['ls-files', '-z'], root).split('\0').filter(file => managed(file) && !kitIssueEvidence(file));
   if (!files.includes('package.json') || !files.includes('tools/cli.mjs')) throw new Error('missing kit assets');
   const stage = fs.mkdtempSync(path.join(os.tmpdir(), 'cinderling-pack-'));
   try {
     const hashes = {};
+    const modes = {};
     for (const file of files) {
       if (!fs.lstatSync(path.join(root, file)).isFile()) throw new Error(`unsupported kit asset ${file}`);
       const data = fs.readFileSync(path.join(root, file));
       const target = path.join(stage, file);
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, data);
+      fs.chmodSync(target, 0o644 | (fs.statSync(path.join(root, file)).mode & 0o111));
       hashes[file] = hash(data);
+      modes[file] = fs.statSync(target).mode & 0o777;
     }
-    fs.writeFileSync(path.join(stage, 'release.json'), JSON.stringify({ version, files: hashes }, null, 2) + '\n');
+    fs.writeFileSync(path.join(stage, 'release.json'), JSON.stringify({ version, files: hashes, modes }, null, 2) + '\n');
     fs.mkdirSync(path.dirname(destination), { recursive: true });
     run('tar', ['-czf', destination, '-C', stage, '.'], root);
     return destination;
@@ -102,22 +115,31 @@ const unpack = (archive, version) => {
     if (entries.some(entry => !entry.startsWith('./') || entry.split('/').includes('..') || entry.startsWith('./.git/'))) throw new Error('unsafe archive path');
     const types = run('tar', ['-tvzf', file], stage).trim().split('\n');
     if (types.some(line => !['-', 'd'].includes(line[0]))) throw new Error('unsafe archive entry type');
-    run('tar', ['-xzf', file, '-C', source, '--no-same-owner'], stage);
+    run('tar', ['-xzf', file, '-C', source, '--no-same-owner', '--same-permissions'], stage);
     const release = JSON.parse(fs.readFileSync(path.join(source, 'release.json'), 'utf8'));
     if (release.version !== version || !release.files || !Object.keys(release.files).length || entries.some(entry => entry !== './' && !entry.endsWith('/') && entry !== './release.json' && !Object.hasOwn(release.files, entry.slice(2)))) throw new Error('archive version mismatch');
     for (const [name, digest] of Object.entries(release.files)) {
       if (!managed(name) || !/^[a-f0-9]{64}$/.test(digest) || hash(fs.readFileSync(path.join(source, name))) !== digest) throw new Error(`invalid archive asset ${name}`);
+      if (release.modes && (!Number.isInteger(release.modes[name]) || release.modes[name] < 0 || release.modes[name] > 0o777 || (fs.statSync(path.join(source, name)).mode & 0o777) !== release.modes[name])) throw new Error(`invalid archive asset mode ${name}`);
     }
     return { stage, source, release };
   } catch (error) { fs.rmSync(stage, { recursive: true, force: true }); throw error; }
 };
+
+export const inspectRelease = (archive, version) => {
+  ensureVersion(version);
+  const { stage, release } = unpack(archive, version);
+  try { return release; } finally { fs.rmSync(stage, { recursive: true, force: true }); }
+};
+
+export const inspectDefinitions = (root, old) => Object.fromEntries(localDefinitions(root, old));
 
 const nextId = root => {
   const dir = path.join(root, 'docs/decisions');
   const ids = fs.existsSync(dir) ? fs.readdirSync(dir).map(name => /^\d{5}/.exec(name)?.[0]).filter(Boolean).map(Number) : [];
   return String(Math.max(-1, ...ids) + 1).padStart(5, '0');
 };
-const record = (id, title, body) => `---\nid: "${id}"\ntitle: "${title}"\ncategory: governance\ntype: architecture\nstatus: accepted\ndate: ${new Date().toISOString().slice(0, 10)}\ntags: [adoption, migration]\ndependsOn: []\nsupersedes: []\nrelated: []\n---\n\n# Decision\n\n${body}\n\n# Provenance\n\nAuthor: Cinderling CLI\nSources: Private release installation\n`;
+const record = (id, title, body) => `---\nid: "${id}"\ntitle: "${title}"\ncategory: governance\ntype: architecture\nstatus: accepted\ndate: ${new Date().toISOString().slice(0, 10)}\ntags: [adoption, migration]\ndependsOn: []\nsupersedes: []\nrelated: []\n---\n\n# AI Summary\n\n${body}\n\n# Decision\n\n${body}\n\n# Provenance\n\nAuthor: Cinderling CLI\nSources: Private release installation\n`;
 
 const parseConfig = (name, text) => {
   let clean = '';
@@ -181,6 +203,7 @@ const localDefinitions = (root, old) => {
   const nested = (dir, relative = '') => {
     if (!safeStat(root, relative)) return;
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (ignoredDirectory(entry.name)) continue;
       const name = relative ? `${relative}/${entry.name}` : entry.name;
       if (entry.isSymbolicLink() && ['.opencode', '.agents', '.claude', 'opencode.json', 'opencode.jsonc'].includes(entry.name)) safeStat(root, name);
       if (entry.isDirectory() && !['.git', 'node_modules', '.cinderling', '.opencode', '.agents', '.claude'].includes(entry.name)) nested(path.join(dir, entry.name), name);
@@ -203,7 +226,7 @@ const localDefinitions = (root, old) => {
   return found;
 };
 
-export const install = (root, archive, version, { dryRun = false, keepOverrides = false, definitions, definitionDecisions = {}, reconcile = false, legacyBackup, io = fs } = {}) => {
+export const install = (root, archive, version, { dryRun = false, keepOverrides = false, definitions, definitionDecisions = {}, reconcile = false, legacyBackup, reviewedMigration, io = fs } = {}) => {
   ensureVersion(version);
   const { stage, source, release } = unpack(archive, version);
   try {
@@ -221,17 +244,24 @@ export const install = (root, archive, version, { dryRun = false, keepOverrides 
     };
     const metadata = capture(metadataPath);
     const old = metadata ? JSON.parse(metadata.data.toString('utf8')) : null;
+    for (const [name, digest] of Object.entries(reviewedMigration?.reviewedFiles || {})) {
+      const snapshot = capture(name);
+      if ((snapshot ? hash(snapshot.data) : null) !== digest) throw new Error(`stale installation review: ${name}`);
+      if (reviewedMigration.reviewedModes && (snapshot ? snapshot.mode & 0o777 : null) !== reviewedMigration.reviewedModes[name]) throw new Error(`stale installation review mode: ${name}`);
+    }
     capture('docs/decisions/index.md');
     capture('docs/architecture/governance.md');
     if (!old && safeStat(root, 'docs/decisions') && !safeStat(root, 'docs/decisions/index.md') && fs.readdirSync(path.join(root, 'docs/decisions')).some(name => /^\d{5}.*\.md$/.test(name))) throw new Error('existing decision history requires a decisions index before adoption');
     if (safeStat(root, 'docs/decisions/index.md') && !safeStat(root, 'docs/architecture/governance.md')) throw new Error('existing decisions index requires docs/architecture/governance.md before adoption');
     const releaseHash = hash(JSON.stringify(Object.entries(release.files).sort(([a], [b]) => a.localeCompare(b))));
+    const releaseModeHash = hash(JSON.stringify(Object.keys(release.files).sort().map(name => [name, fs.statSync(path.join(source, name)).mode & 0o777])));
     if (old?.version === version && !reconcile) throw new Error('version already installed; use --reconcile to revisit definitions');
     if (reconcile && (!old || old.version !== version)) throw new Error('reconcile requires the installed version');
     if (reconcile && old.releaseHash !== releaseHash) throw new Error('reconcile requires the exact installed release manifest');
+    if (reconcile && old.releaseModeHash && old.releaseModeHash !== releaseModeHash) throw new Error('reconcile requires the exact installed release modes');
     if (old && !versionPattern.test(old.version)) throw new Error('invalid installed version');
     if (definitions && !['retain', 'retire'].includes(definitions)) throw new Error('definitions decision must be retain or retire');
-    const inventory = localDefinitions(root, old);
+    const inventory = localDefinitions(root, reviewedMigration && old ? { ...old, files: Object.fromEntries(Object.entries(old.files || {}).filter(([name]) => Object.hasOwn(release.files, name))) } : old);
     for (const [name, choice] of Object.entries(definitionDecisions)) if (!inventory.has(name) || !['retain', 'retire'].includes(choice)) throw new Error(`invalid definition decision: ${name}`);
     const decisions = new Map([...inventory].map(([name]) => [name, definitionDecisions[name] || definitions]));
     const pending = [...decisions].filter(([, choice]) => !choice);
@@ -308,10 +338,12 @@ export const install = (root, archive, version, { dryRun = false, keepOverrides 
     for (const [name, config] of sections) writes.set(`${archiveRoot}/${name}`, Buffer.from(JSON.stringify(config, null, 2) + '\n'));
     for (const [name, config] of configs) writes.set(name, Buffer.from(JSON.stringify(config, null, 2) + '\n'));
     const overrides = [];
+    for (const name of old?.overrides || []) if (!release.files[name] && reviewedMigration?.preserve.includes(name) && safeStat(root, name)) overrides.push(name);
     const files = { ...release.files };
     for (const name of Object.keys(release.files)) {
+      if (reviewedMigration?.preserve.includes(name)) { delete files[name]; if (safeStat(root, name)) overrides.push(name); continue; }
       if (name.startsWith('consumer-template/')) { delete files[name]; continue; }
-      if (name === 'tools/distribution.test.mjs') {
+      if (['tools/distribution.test.mjs', 'tools/installation.test.mjs', 'tools/bootstrap.test.mjs'].includes(name)) {
         delete files[name];
         capture(name);
         if (old && safeStat(root, name)) {
@@ -328,47 +360,57 @@ export const install = (root, archive, version, { dryRun = false, keepOverrides 
       if (old && consumerOwned(name)) { delete files[name]; continue; }
       if (!old && existing && consumerOwned(name)) { delete files[name]; continue; }
       capture(name);
-      const desired = consumerAsset(source, name, root);
+      const desired = reviewedMigration?.adaptations[name] ?? consumerAsset(source, name, root);
+      const desiredMode = reviewedMigration?.adaptationModes?.[name] ?? (fs.statSync(path.join(source, name)).mode & 0o777);
+      modes.set(name, desiredMode);
       const digest = hash(desired);
       if (consumerOwned(name)) delete files[name];
       else files[name] = digest;
-      if (existing && !retiring.includes(name) && hash(fs.readFileSync(target)) !== digest && (!old?.files?.[name] || hash(fs.readFileSync(target)) !== old.files[name])) {
+      if (existing && !reviewedMigration && !retiring.includes(name) && hash(fs.readFileSync(target)) !== digest && (!old?.files?.[name] || hash(fs.readFileSync(target)) !== old.files[name])) {
         if (!keepOverrides) throw new Error(`project override conflict: ${name}`);
         overrides.push(name);
         continue;
       }
-      if (!existing || hash(fs.readFileSync(target)) !== digest) writes.set(name, desired);
+      if (!existing || hash(fs.readFileSync(target)) !== digest || (existing.mode & 0o777) !== desiredMode) writes.set(name, desired);
     }
     for (const name of retiring) if (!name.includes('#') && !release.files[name]) writes.set(name, null);
     for (const name of Object.keys(old?.files || {})) if (!projectArchitecture(name) && !consumerOwned(name) && !release.files[name] && !Object.hasOwn(retained, name) && !retired.has(name) && safeStat(root, name)) {
+      if (reviewedMigration?.preserve.includes(name)) { overrides.push(name); continue; }
       capture(name);
+      if (reviewedMigration?.retire?.includes(name)) { writes.set(name, null); continue; }
       if (hash(fs.readFileSync(path.join(root, name))) !== old.files[name]) {
         if (!keepOverrides) throw new Error(`project override conflict: ${name}`);
         overrides.push(name);
       } else writes.set(name, null);
     }
-    if (!old) for (const name of ['tests/acceptance/package.json', 'tests/acceptance/adoption.feature', 'tests/acceptance/steps.mjs', 'docs/architecture/project-domain.md', 'src/index.mjs', 'src/index.test.mjs']) if (!capture(name)) writes.set(name, fs.readFileSync(path.join(source, 'consumer-template', name)));
+    if (!old && !reviewedMigration) for (const name of ['tests/acceptance/package.json', 'tests/acceptance/adoption.feature', 'tests/acceptance/steps.mjs', 'docs/architecture/project-domain.md', 'src/index.ts', 'src/index.test.ts', ...(!safeStat(root, 'package.json') ? ['tsconfig.json', 'cinderling-source-policy.json'] : [])]) if (!capture(name)) writes.set(name, fs.readFileSync(path.join(source, 'consumer-template', name)));
+    for (const name of reviewedMigration?.retire || []) if (safeStat(root, name)) { capture(name); writes.set(name, null); }
     if (old) for (const name of Object.keys(files)) if (name.startsWith('docs/decisions/') || name === 'docs/decisions/index.md' || name === 'docs/architecture/governance.md') delete files[name];
     for (const name of overrides) delete files[name];
     if (old) safeStat(root, 'docs/decisions');
-    const id = nextId(old || safeStat(root, 'docs/decisions/index.md') ? root : source);
-    const title = reconcile ? `Cinderling reconciliation ${version}` : old ? `Cinderling migration ${old.version} to ${version}` : `Cinderling adoption ${version}`;
-    const decisionName = `docs/decisions/${id}-${old ? 'migration' : 'adoption'}-${version}.md`;
-    if (safeStat(root, decisionName)) throw new Error('decision already exists');
-    const body = `${old ? `Upgrade from ${old.version} to ${version}. Changed managed artifacts: ${[...writes.keys()].join(', ') || 'none'}. Project adaptations retained: ${overrides.join(', ') || 'none'}.` : `Adopt exact private Cinderling release ${version}.`} OpenCode definitions archived at ${archiveRoot}: ${retiring.join(', ') || 'none'}. Retain decisions: ${Object.keys(retained).join(', ') || 'none'}; retire decisions: ${retiring.filter(name => decisions.get(name) === 'retire').join(', ') || 'none'}. Fresh-session verification is required.`;
-    writes.set(decisionName, Buffer.from(record(id, title, body)));
-    safeStat(root, 'docs/decisions/index.md');
-    const index = writes.get('docs/decisions/index.md')?.toString() || fs.readFileSync(path.join(root, 'docs/decisions/index.md'), 'utf8');
-    if (!/\|---\|---\|---\|\n/.test(index)) throw new Error('unsupported decisions index format');
-    writes.set('docs/decisions/index.md', Buffer.from(index.replace(/(\|---\|---\|---\|\n)/, `$1| ${id} | ${title} | governance |\n`)));
-    safeStat(root, 'docs/architecture/governance.md');
-    const governance = writes.get('docs/architecture/governance.md')?.toString() || fs.readFileSync(path.join(root, 'docs/architecture/governance.md'), 'utf8');
-    writes.set('docs/architecture/governance.md', Buffer.from(governance + `\n## ${title}\n\nSource: [${id}](../decisions/${path.basename(decisionName)})\n\n${body}\n`));
+    if (!reviewedMigration) {
+      const id = nextId(old || safeStat(root, 'docs/decisions/index.md') ? root : source);
+      const title = reconcile ? `Cinderling reconciliation ${version}` : old ? `Cinderling migration ${old.version} to ${version}` : `Cinderling adoption ${version}`;
+      const decisionName = `docs/decisions/${id}-${old ? 'migration' : 'adoption'}-${version}.md`;
+      if (safeStat(root, decisionName)) throw new Error('decision already exists');
+      const body = `${old ? `Upgrade from ${old.version} to ${version}. Changed managed artifacts: ${[...writes.keys()].join(', ') || 'none'}. Project adaptations retained: ${overrides.join(', ') || 'none'}.` : `Adopt exact private Cinderling release ${version}.`} OpenCode definitions archived at ${archiveRoot}: ${retiring.join(', ') || 'none'}. Retain decisions: ${Object.keys(retained).join(', ') || 'none'}; retire decisions: ${retiring.filter(name => decisions.get(name) === 'retire').join(', ') || 'none'}. Fresh-session verification is required.`;
+      writes.set(decisionName, Buffer.from(record(id, title, body)));
+      safeStat(root, 'docs/decisions/index.md');
+      const index = writes.get('docs/decisions/index.md')?.toString() || fs.readFileSync(path.join(root, 'docs/decisions/index.md'), 'utf8');
+      if (!/\|---\|---\|---\|\n/.test(index)) throw new Error('unsupported decisions index format');
+      writes.set('docs/decisions/index.md', Buffer.from(index.replace(/(\|---\|---\|---\|\n)/, `$1| ${id} | ${title} | governance |\n`)));
+      safeStat(root, 'docs/architecture/governance.md');
+      const governance = writes.get('docs/architecture/governance.md')?.toString() || fs.readFileSync(path.join(root, 'docs/architecture/governance.md'), 'utf8');
+      writes.set('docs/architecture/governance.md', Buffer.from(governance + `\n## ${title}\n\nSource: [${id}](../decisions/${path.basename(decisionName)})\n\n${body}\n`));
+    }
+    if (reviewedMigration) for (const [name, data] of Object.entries(reviewedMigration.writes)) writes.set(name, data);
     const integration = old?.validationIntegration || (old ? 'unknown-requires-review' : safeStat(root, 'package.json') ? 'project-owned-manifest-requires-integration' : 'generated-manifest-requires-verification');
     const requireFromProject = createRequire(path.resolve(root, 'tools/architecture.mjs'));
     const missingDependencies = ['typescript', '@cucumber/gherkin', '@cucumber/messages', 'yaml'].filter(name => { try { requireFromProject.resolve(name); return false; } catch (error) { if (error.code !== 'MODULE_NOT_FOUND') throw error; return true; } });
     const validation = { integration, missingDependencies, verification: 'not-run' };
-    writes.set(metadataPath, Buffer.from(JSON.stringify({ version, releaseHash, files, overrides, validationIntegration: integration, definitions: { retained, retired: [...retired] } }, null, 2) + '\n'));
+    const installationHistory = [...(old?.installationHistory || []), ...(old?.installation ? [old.installation] : [])];
+    const summaryBaseline = old?.summaryBaseline ?? (reviewedMigration ? { version, files: Object.fromEntries(Object.entries(reviewedMigration.reviewedFiles).filter(([name, digest]) => /^docs\/decisions\/\d{5}-[^/]+\.md$/.test(name) && typeof digest === 'string')) } : undefined);
+    writes.set(metadataPath, Buffer.from(JSON.stringify({ version, releaseHash, releaseModeHash, files, overrides, validationIntegration: integration, definitions: { retained, retired: [...retired] }, ...(summaryBaseline ? { summaryBaseline } : {}), ...(reviewedMigration ? { installation: reviewedMigration.evidence } : {}), ...(reviewedMigration || installationHistory.length ? { installationHistory } : {}) }, null, 2) + '\n'));
     const summary = { version, from: old?.version || null, changed: [...writes.keys()], overrides, validation, definitions: { detected: [...inventory.keys()], retained: Object.keys(retained), retired: retiring, archived: archiveRoot, backup: exportRoot || null, retiredPaths: [...retired], unassessed: inventory.unsupported, acceptance: 'requires-fresh-session-verification' } };
     for (const name of writes.keys()) capture(name);
     const exports = exportRoot ? [['.gitignore', Buffer.from('*\n'), 0o600], ...[...writes].filter(([name]) => name.startsWith(`${archiveRoot}/`)).map(([name, data]) => [`${version}${reconcile ? '-reconcile' : ''}/${name.slice(archiveRoot.length + 1)}`, data, modes.get(name) ?? 0o600])] : [];
@@ -433,12 +475,12 @@ export const install = (root, archive, version, { dryRun = false, keepOverrides 
         if (base === root && snapshots.has(file) && !equalState(state(root, file), snapshots.get(file))) throw new Error(`project file changed during migration: ${file}`);
         if (data === null) io.rmSync(target);
         else if (base === exportRoot) io.writeFileSync(target, data, { mode, flag: 'wx' });
-        else atomicWrite(target, data, backup.original?.mode ?? mode, () => {
+        else atomicWrite(target, data, mode ?? backup.original?.mode, () => {
           verifySources();
           if (!equalState(state(root, file), snapshots.get(file))) throw new Error(`project file changed during migration: ${file}`);
         });
         backup.applied = true;
-        backup.expected = data === null ? null : { data, mode: backup.original?.mode ?? (safeStat(base, file).mode & 0o7777) };
+        backup.expected = data === null ? null : { data, mode: mode ?? backup.original?.mode ?? (safeStat(base, file).mode & 0o7777) };
         if (base === exportRoot) {
           io.chmodSync(target, mode);
           backup.expected.mode = mode;

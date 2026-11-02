@@ -60,13 +60,13 @@ importers:
       '@cucumber/cucumber':
         specifier: ^11.3.0
         version: 11.3.0
-      '@scaffold/backend':
-        specifier: workspace:*
-        version: link:../../apps/backend
       '@scaffold/db':
         specifier: workspace:*
         version: link:../../libs/db
-      '@scaffold/website':
+      backend:
+        specifier: workspace:*
+        version: link:../../apps/backend
+      website:
         specifier: workspace:*
         version: link:../../apps/website
 

@@ -6,6 +6,81 @@ The token must be authorized for the **Cinderling repository**, not just the imp
 
 ## First install without a CLI
 
+### Reviewed adoption, upgrade and reconciliation
+
+For releases containing the reviewed installer, obtain `tools/bootstrap.mjs` from the **same explicit release tag** through an authorized GitHub reader (download the individual file from that tag, or copy it from a trusted checkout of that tag). Save it outside the consumer, for example `/tmp/cinderling-bootstrap.mjs`; review it before execution. Do not run a moving `main` script or pipe a download to a shell. This standalone Node 24 entry point needs no installed Cinderling command or project automation. It requires Git, tar and pnpm; application of an ADR review installs the target CLI's locked dependencies in its temporary directory with lifecycle scripts disabled. Consumer package manifests are preserved.
+
+Obtain the exact release archive and its SHA-256 through an authorized release-reader workflow. Set the following environment variables; none contains a token:
+
+```sh
+export CINDERLING_VERSION=vX.Y.Z
+export CINDERLING_ARCHIVE=/absolute/path/cinderling-vX.Y.Z.tar.gz
+export CINDERLING_SHA256=<trusted-64-character-sha256>
+export CONSUMER_DIR=/absolute/path/existing-project
+node /tmp/cinderling-bootstrap.mjs "$CINDERLING_VERSION" --archive "$CINDERLING_ARCHIVE" --sha256 "$CINDERLING_SHA256" --dir "$CONSUMER_DIR" > /tmp/cinderling-review.json
+```
+
+Use a real published version and trusted digest in place of the placeholders. Supplied archives require **no `GH_TOKEN`**. Omit `--archive` to download with a process-environment `GH_TOKEN` authorized for the private Cinderling repository. Authentication failure stops the workflow. Bootstrap verifies the digest, safe archive entry types and paths, exact manifest version and all file hashes **before executing the target CLI**. It rejects older releases lacking reviewed-installation support. Internal hashes prove consistency; the independently obtained digest binds the trusted artifact. This branch does not publish a new release.
+
+The first invocation only produces a JSON review template. It selects `init`, `upgrade` or `reconcile` from installed metadata and adoption evidence. Partial/inconsistent installations stop for explicit repair. For pre-fingerprint installations, coherent accepted adoption evidence can authorize a reviewed version upgrade; same-version reconciliation still requires the original release fingerprint. Do not fabricate metadata to bypass a restriction.
+
+Review the project's `AGENTS.md`, operational guidance, compactions, accepted decisions, active drafts, registry, package scripts and installation history. Prepare all source artifacts **before** generating the final review so their bytes and modes are bound into the plan. Then fill the template's `review` object:
+
+- `governance.resolution`: `retain` or `reconcile`, with rationale and all inventoried governance paths. `governance.replacements` maps an active compaction or `docs/decisions/index.md` to a reviewed project-relative source file. Accepted records are never replacement targets. An ungoverned project has `baselineRequired: true`; supply a reviewer-authored governance compaction and empty decisions registry in this mapping before adoption.
+- `restrictions`: set `resolution` to `compatible` only after reviewing restrictions. List each restriction with its resolution and rationale. An unresolved restriction blocks application. This is a semantic approval by the reviewer, not an automated finding of compatibility.
+- `decisions`: select a valid, promotable draft containing the exact target version (and previous version on upgrade), using `source` and a direct-child `docs/decision-drafts/*.md` `target`. Include full required frontmatter, provenance, meaningful top-level `# AI Summary` prose and `# Effective Architecture` prose. Fenced code and placeholders do not qualify as a summary; review its accuracy. Alternatively select an already approved and promoted project migration record with identical source/target and `existingAccepted: true`; it must have coherent registry and compaction links and its historical content is preserved. The installer never promotes decisions. Promotion's ID/status change preserves the recorded normalized identity.
+- `references`: each reference to a retiring asset needs rationale and disposition. Active references use `replace`, a `replacement` source matching the governance replacement mapping, and a selected `supersession` decision target. Accepted history uses `historical` and a selected decision explicitly superseding its ID. Replacement compactions must link the supersession and omit retired active references. A scoped draft is branch-authoritative, not promoted architecture.
+- `guidance`: actual project-relative operational guidance paths. Adapt Cinderling commands to these paths through reproducible sources rather than assuming a consumer has kit README/roadmap files. Review stale `AGENTS.md` and other instructions as well.
+- `definitions`: explicitly choose `retain` or `retire` for every detected definition. Both archive the original outside discovery and remove its active entry point; Cinderling replacements become the sole project-local harness. MCP configuration and executables survive; user configuration and authentication are outside installer scope.
+- `devcontainer`: default `adopt`, or explicitly `retain`. Align the `.devcontainer/` classifications. Review project-specific requirements, overlapping mounts and host-owned authentication. Adapt adopted assets explicitly when needed.
+- `classifications`: every release path appears exactly once in `managed`, `preserve` or `adaptations`. Adaptations map destination to a reviewed project-relative source and survive supported upgrades. Preserve covers project-owned paths and deliberate omissions; an override must exist. Protected project manifests, architecture, graph and portable test files stay project-owned, so integrate new validator dependencies/scripts deliberately. Remove a destination from its previous list when changing classification.
+- `removedAssets`: explicitly `preserve` or `retire` each obsolete managed path. A retired harness definition cannot remain active as a preserved override.
+
+Kit issue-evidence pages remain in the Cinderling repository and are omitted from new release archives. When an older installation recorded such a page as managed, classify it as a removed asset during upgrade: choose `retire` for an intentionally absent or explicitly retired copy, or `preserve` for an existing copy to keep. Review modified copies and every inventoried active or accepted-history reference before applying; preserve accepted records and use the reviewed replacements and supersession required above. Previously published archives retain their original contents and cannot be changed by a later installer.
+
+For a release containing `devcontainer-runtime`, review its skill, command loading guidance and generated `AGENTS.md` alongside existing project instructions. Classify each release path and carry required loading guidance into retained or adapted operational files through reviewed, reproducible sources. Integrate a project-owned runtime setup/preflight using existing scripts and actual service topology; the kit does not configure the project's database, browser or endpoints. Record the adoption and any workflow decision through the project's draft-first migration review, preserve project overrides and restart OpenCode to discover the installed skill. Validate the project preflight and applicable checks in its actual environment; installation fixtures alone do not establish live-stack or fresh-host success.
+
+### Development stack orchestration
+
+New generated manifests include `pnpm dev:stack`, which runs the distributed `tools/dev-stack.mjs`. Create a **project-owned** `dev-stack.json` at the workspace root, for example:
+
+```json
+{
+  "migrations": [["pnpm", "--filter", "api", "db:migrate"]],
+  "seeds": [["pnpm", "--filter", "api", "db:seed"]],
+  "apps": [["pnpm", "--filter", "api", "dev"], ["pnpm", "--filter", "web", "dev"]]
+}
+```
+
+Each command is an argument array executed directly from the workspace root with inherited environment and terminal streams, without shell expansion. `migrations` and `seeds` may be omitted or empty; `apps` must contain at least one command. Migrations run sequentially and must succeed before apps start. Seeds run sequentially after migrations only with `pnpm dev:stack --seed`; requesting seeding without configured seeds fails. Apps start concurrently. Any app exit, including a successful one, or spawn failure stops the remaining apps and fails the command. Migration or seed failure prevents later phases. Ctrl-C or SIGTERM forwards the signal to children, waits for shutdown, and escalates to SIGKILL after three seconds; on Unix, child process groups are signalled to include descendants. Exit status is nonzero on failures and 130/143 on SIGINT/SIGTERM. The runner does not provision services or check application readiness; configure project-specific prerequisites separately.
+
+Existing consumers should integrate `"dev:stack": "node tools/dev-stack.mjs"` into their project-owned root manifest during reviewed adoption of a release containing the runner. Keep `dev-stack.json` project-owned and review commands, service prerequisites, and any adaptations in the migration; upgrades do not automatically update existing manifests or overwrite this configuration. A newly generated consumer must also create its own configuration before invoking the command.
+
+When adopting the `application-development-ports` skill, review its port and URL conventions against existing project assignments and retain project-owned settings through the migration. Restart OpenCode to discover the skill. The skill describes collision-aware multi-application examples, environment variables and devcontainer forwarding; the project supplies and documents its own non-secret example values and actual prerequisites.
+
+For releases containing `clerk-authentication`, review and classify the skill during adoption, including any colliding project-local definitions and applicable operational guidance. Integrate ownership and relevant relationships into the project-owned implementation graph according to project conventions; do not replace it with the kit graph. Restart OpenCode to discover the skill. It is applicable when the project chooses Clerk; the project owns its configuration, identity and authorization policies. Fixture packaging or mocked authentication does not establish hosted login, stream behavior or revocation; validate those separately in an authorized environment using the runtime skill where applicable.
+
+The implementation graph is project-owned and reviewed upgrades preserve it. During adoption, explicitly integrate graph units for the installed stack runner and ports skill using the project's existing unit hierarchy and ownership conventions; do not replace the graph with the kit's copy. Review semantic relationships reflecting the actual project: the ports skill loads runtime preparation and consumer guidance and depends on the stack runner; consumer installation guidance and applicable tooling tests may depend on the runner. Map these to the project's real unit IDs and include only relationships and test commands that apply to installed project assets. Review ownership of project configuration and any existing globs to avoid ambiguous ownership. Validate the updated graph with the project architecture checks and inspect `pnpm graph:impact <base>` for representative runner and skill changes; impact remains advisory and semantic completeness requires review.
+
+If the existing governance format or history is incompatible, a project may first approve a one-time migration that archives original decisions byte-for-byte, records a hash/provenance mapping and establishes new native records and coherent active registry/compactions. **That project-specific governance transition is not granted by the installer**: preserve original accepted content, follow the project's explicit approval process, and validate the resulting baseline before applying installation. A normal supersession avoids this heavier migration where possible.
+
+Regenerate after changing any inventoried file; reapply reviewed choices to the new template. Store the final review outside the project or pass its exact path through `--review` so it is excluded from its own stale-state check:
+
+Designated `.opencode-state`, `.devcontainer-local`, `.nx` and dependency/Git state are excluded from the broad snapshot so running the workflow does not invalidate itself. Keep review source artifacts in project-owned non-runtime directories. Explicit release destinations and migration inputs still receive state checks. On promotion, active compaction and registry links to the selected draft are relocated to its accepted record; historical accepted records remain unchanged.
+
+```sh
+node /tmp/cinderling-bootstrap.mjs "$CINDERLING_VERSION" --archive "$CINDERLING_ARCHIVE" --sha256 "$CINDERLING_SHA256" --dir "$CONSUMER_DIR" --review /tmp/cinderling-review.json --dry-run
+node /tmp/cinderling-bootstrap.mjs "$CINDERLING_VERSION" --archive "$CINDERLING_ARCHIVE" --sha256 "$CINDERLING_SHA256" --dir "$CONSUMER_DIR" --review /tmp/cinderling-review.json
+```
+
+Review the dry-run operation, changed files, governance evidence, devcontainer, definition archive and pending validations before applying. Do not edit concurrently. Application checks stale bytes/modes and uses transactional staging/rollback. `.cinderling/managed.json` records release digest, manifest fingerprint, decisions, classifications, adaptation sources, validation status and prior installation evidence. Keep adaptation source files available; they are reproducible inputs for the next explicit-version upgrade. Inspect the diff and integrate/run project checks afterward. `verification: not-run` is deliberate and does not mean consumer validation passed.
+
+`node <target-kit>/tools/cinderling.mjs install ...` exposes the same workflow when the exact verified target CLI and its dependencies are already available. Legacy `init`/`upgrade` entry points require review for governed or initialized consumers; prefer `install` for automatic operation selection. Same-version installation is reconciliation against the recorded exact release. Review is required anew for every migration; prior evidence stays distinct.
+
+### Historical bootstrap for older releases
+
+The following bootstrap describes older releases only. It is not the reviewed existing-project migration path; do not use it to bypass consumer governance. Older releases may require a separately reviewed project-specific migration.
+
 On a host with Node 24, Git, tar, pnpm 10.32.1 and a private-repository read token in `GH_TOKEN`, set `CINDERLING_VERSION=v0.1.0` and `CONSUMER_DIR=/path/to/empty-project`, then run the following in a trusted shell with tracing disabled. The token stays in the process environment; do not paste it into a URL or command argument.
 
 ```sh
@@ -35,7 +110,7 @@ try {
 NODE
 ```
 
-The CLI checks the archive version and file hashes before writing. The release archive itself supplies the CLI; no npm publication or preinstalled Cinderling is required. Release evidence remains in the Cinderling source repository.
+The CLI checks the archive version and file hashes before writing. The release archive itself supplies the CLI; no npm publication or preinstalled Cinderling is required. The first tag-triggered release run passed validation but failed to publish. A later `v0.1.0-beta.2` private prerelease published an asset, but a private-reader bootstrap from that asset has not been verified. See [issue 16 release evidence](https://github.com/scaredfinger/cinderling/blob/main/docs/issue-16-release-verification.md) and [issue 18 exercise](https://github.com/scaredfinger/cinderling/blob/main/docs/issue-18-prime-solve-evidence.md) in the kit repository.
 
 Use the **target release's CLI** for upgrades: older installed CLIs may reject asset types introduced by newer releases. Download the explicit target archive using the authenticated bootstrap above, then extract it into a temporary directory and run its CLI, for example:
 
@@ -45,7 +120,9 @@ tar -xzf "$CINDERLING_ARCHIVE" -C "$KIT_DIR"
 node "$KIT_DIR/tools/cinderling.mjs" upgrade "$CINDERLING_VERSION" --archive "$CINDERLING_ARCHIVE" --dir "$CONSUMER_DIR" --dry-run
 ```
 
-Review the plan and project Git diff, repeat without `--dry-run`, then remove the temporary directory. In the download bootstrap above, replace `init` with `upgrade` and add `--dry-run` to preview; repeat the download/bootstrap to apply. Modified managed files stop an upgrade; `--keep-overrides` explicitly retains them and records the adaptations in the migration ADR. On write failure the installer attempts to restore all prior contents and modes, reporting any restoration failures for manual recovery. New migration records are created for each successful version transition, and the installed version is stored in `.cinderling/managed.json`. Accepted ADRs remain immutable; keep the project governance and category compactions under review. A real tag and private release download must be exercised before calling this a verified installation path.
+Review the plan and project Git diff, repeat without `--dry-run`, then remove the temporary directory. In the download bootstrap above, replace `init` with `upgrade` and add `--dry-run` to preview; repeat the download/bootstrap to apply. Modified managed files stop an upgrade; `--keep-overrides` explicitly retains them and records the adaptations in the migration ADR. On write failure the installer attempts to restore all prior contents and modes, reporting any restoration failures for manual recovery. New migration records are created for each successful version transition, and the installed version is stored in `.cinderling/managed.json`. Accepted ADRs remain immutable; project governance and category compactions are preserved on upgrade and require review against updated operational guidance and migration decisions. A valid scoped draft is authoritative on its branch but is not promoted architecture. A real tag and private release download must be exercised before calling this a verified installation path.
+
+Distributed commands follow the consumer's governance and scoped branch guidance for decision context. A fresh consumer receives the kit's accepted governance; an upgrade retains project-owned governance and appends the migration record's traceability entry. Unpromoted kit drafts are not distributed as accepted rules. Review any desired governance change through the consumer's decision process rather than assuming an upgrade replaces project architecture.
 
 If any rollback restoration fails, the error identifies each affected path and reports a private recovery directory. Its `manifest.json` maps project-relative paths or absolute external-export paths to numbered backup files and original modes; a null file means the path was originally absent. An external export is preserved when project restoration fails; inspect it and the reported recovery information before retrying. Restore entries manually after resolving the reported error, verify the project, and remove the recovery directory. If saving recovery data itself fails, the error reports that failure and any partial directory. Installer discovery and managed destinations reject symlinks, including dangling symlinks and symlinked ancestors.
 
@@ -85,7 +162,9 @@ The release archive includes the kit's distribution fixture suite for release va
 
 ### Project test contract
 
-Initialized starter projects expose `pnpm test` for unit tests, `pnpm test:arch` for architecture checks, and `pnpm test:cinderling` for Cinderling tool validations. The starter `pnpm e2e` deliberately fails with an unconfigured message: the adoption scenario is not a project end-to-end suite. The project owns the real e2e command, including DB and browser coverage where applicable, and can choose any internal orchestration for all four commands. Existing project manifests are preserved, so integrate this command surface deliberately rather than replacing project scripts. Before candidate review run the first three commands; arrange `pnpm e2e` on the reviewed exact head before merge. Report a missing, unavailable or deferred e2e suite as pending, not passed, and repeat final gates after a candidate changes.
+New starter application and library source and tests use TypeScript. `pnpm build` and `pnpm type-check` run the TypeScript compiler, while `pnpm test:arch` applies the project-owned `cinderling-source-policy.json`. An exception entry has `file`, `decision`, and `rationale` fields; `file` is an exact JavaScript source path, and `decision` names a project decision under `docs/decisions/` or `docs/decision-drafts/` authorizing it. Review the decision semantically; the check only verifies its presence and status. Config entry points and kit tooling are outside this source rule. Existing consumers retain their own manifests and policy and are not silently enrolled on upgrade.
+
+Initialized starter projects expose `pnpm test` for unit tests, `pnpm test:arch` for architecture checks, and `pnpm test:cinderling` for Cinderling tool validations. The starter `pnpm e2e` deliberately fails with an unconfigured message: the adoption scenario is not a project end-to-end suite. The project owns the real e2e command, including DB and browser coverage where applicable, and can choose any internal orchestration for all four commands. Existing project manifests are preserved, so integrate this command surface deliberately rather than replacing project scripts. Before candidate review run the first three commands. Follow project governance for e2e applicability: an explicitly confirmed absence of a suite and requirement can be reported as not applicable with its basis, not as passed; a placeholder alone does not establish that determination. When e2e exists or is required, arrange it on the reviewed exact head before merge and report missing, unavailable or deferred evidence as pending or blocked. Repeat applicable final gates after a candidate changes.
 
 ## Release checklist
 
